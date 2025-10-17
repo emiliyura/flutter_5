@@ -117,7 +117,7 @@ class _BookingContainerState extends State<BookingContainer> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Hotel Booking Demo'),
+        title: const Text('Hotel Booking'),
         actions: [
           IconButton(
             icon: const Icon(Icons.list_alt),
