@@ -19,6 +19,8 @@ class _BookingContainerState extends State<BookingContainer> {
     Room(id: 'r1', title: 'Стандартный однокомнатный', price: 50.0, beds: 1, amenities: ['Wi-Fi', 'Телевизор']),
     Room(id: 'r2', title: 'Двухместный улучшенный', price: 80.0, beds: 2, amenities: ['Wi-Fi', 'Кондиционер']),
     Room(id: 'r3', title: 'Люкс', price: 150.0, beds: 2, amenities: ['Wi-Fi', 'Кондиционер', 'Мини-бар']),
+    Room(id: 'r4', title: 'Семейный номер', price: 120.0, beds: 3, amenities: ['Wi-Fi', 'Кондиционер', 'Балкон', 'Детская кроватка']),
+    Room(id: 'r5', title: 'Президентский люкс', price: 300.0, beds: 2, amenities: ['Wi-Fi', 'Кондиционер', 'Мини-бар', 'Джакузи', 'Панорамные окна', 'Персональный консьерж']),
   ];
 
   List<Booking> _bookings = [];

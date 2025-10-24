@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:local_utils/local_utils.dart';
 import '../../booking/models/room.dart';
 
 class BookingFormScreen extends StatefulWidget {
@@ -74,7 +75,11 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                     TextFormField(
                       controller: _nameCtrl,
                       decoration: const InputDecoration(labelText: 'Имя гостя'),
-                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Введите имя' : null,
+                      validator: (v) {
+                        if (StringHelpers.isNullOrEmpty(v)) return 'Введите имя';
+                        if (!ValidationHelpers.hasMinLength(v!, 2)) return 'Имя должно содержать минимум 2 символа';
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 12),
                     Row(
@@ -84,7 +89,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                             onTap: () => _pickDate(context, true),
                             child: InputDecorator(
                               decoration: const InputDecoration(labelText: 'Дата заезда'),
-                              child: Text(_checkIn == null ? 'Выберите дату' : dateFmt.format(_checkIn!)),
+                              child: Text(_checkIn == null ? 'Выберите дату' : DateHelpers.formatDate(_checkIn!)),
                             ),
                           ),
                         ),
@@ -94,7 +99,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                             onTap: () => _pickDate(context, false),
                             child: InputDecorator(
                               decoration: const InputDecoration(labelText: 'Дата выезда'),
-                              child: Text(_checkOut == null ? 'Выберите дату' : dateFmt.format(_checkOut!)),
+                              child: Text(_checkOut == null ? 'Выберите дату' : DateHelpers.formatDate(_checkOut!)),
                             ),
                           ),
                         ),

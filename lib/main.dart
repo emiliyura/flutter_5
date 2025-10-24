@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'features/booking/booking_container.dart';
+import 'package:local_utils/local_utils.dart';
 
 void main() {
   runApp(const BookingApp());
