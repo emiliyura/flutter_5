@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import 'package:local_utils/local_utils.dart';
 import '../../booking/models/room.dart';
 
@@ -60,7 +61,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.arrow_back)),
+        leading: IconButton(onPressed: () => context.pop(), icon: const Icon(Icons.arrow_back)),
         title: const Text('Бронирование'),
       ),
       body: SafeArea(

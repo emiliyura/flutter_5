@@ -42,7 +42,6 @@ class _PageNavigationContainerState extends State<PageNavigationContainer> {
   }
 
   void _showBookingForm(Room room) {
-    // Открыть экран формы бронирования как отдельный маршрут
     _selectedRoomForBooking = room;
     Navigator.push(
       context,
@@ -74,7 +73,6 @@ class _PageNavigationContainerState extends State<PageNavigationContainer> {
       _repo.addBooking(newBooking);
     });
 
-    // перейти на вкладку «Брони» без сохранения текущей
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
