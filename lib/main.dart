@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'features/booking/booking_container.dart';
-import 'package:local_utils/local_utils.dart';
+// import 'features/booking/page_navigation_container.dart';
+import 'features/booking/route_navigation_container.dart';
 
 void main() {
   runApp(const BookingApp());
@@ -11,14 +11,6 @@ class BookingApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Hotel Booking',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-      ),
-      home: const BookingContainer(),
-    );
+    return const RouteNavigationContainer();
   }
 }
-
-
