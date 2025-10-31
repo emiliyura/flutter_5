@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'features/booking/booking_container.dart';
-import 'package:local_utils/local_utils.dart';
+import 'features/booking/page_navigation_container.dart';
+//import 'features/booking/route_navigation_container.dart';
 
 void main() {
   runApp(const BookingApp());
@@ -11,14 +11,19 @@ class BookingApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ============================================
+    // ВЫБЕРИТЕ РЕАЛИЗАЦИЮ НАВИГАЦИИ:
+    // ============================================
+
+    // КОММИТ 1: Страничная навигация (PageView)
     return MaterialApp(
-      title: 'Hotel Booking',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-      ),
-      home: const BookingContainer(),
+      debugShowCheckedModeBanner: false,
+      title: 'Booking App',
+      theme: ThemeData(useMaterial3: true),
+      home: const PageNavigationContainer(),
     );
+
+    // КОММИТ 2: Маршрутизированная навигация (Named Routes)
+    // return const RouteNavigationContainer();
   }
 }
-
-

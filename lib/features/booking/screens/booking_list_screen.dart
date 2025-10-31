@@ -8,9 +8,8 @@ class BookingListScreen extends StatelessWidget {
   final List<Booking> bookings;
   final List<Room> rooms;
   final void Function(String bookingId) onCancelBooking;
-  final VoidCallback onBack;
 
-  const BookingListScreen({Key? key, required this.bookings, required this.rooms, required this.onCancelBooking, required this.onBack}) : super(key: key);
+  const BookingListScreen({Key? key, required this.bookings, required this.rooms, required this.onCancelBooking}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -18,11 +17,9 @@ class BookingListScreen extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.all(12.0),
-          child: Row(
-            children: [
-              IconButton(onPressed: onBack, icon: const Icon(Icons.arrow_back)),
-              Expanded(child: Text('Мои бронирования', style: Theme.of(context).textTheme.titleLarge)),
-            ],
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text('Мои бронирования', style: Theme.of(context).textTheme.titleLarge),
           ),
         ),
         Expanded(

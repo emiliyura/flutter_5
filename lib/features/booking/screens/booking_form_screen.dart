@@ -58,81 +58,90 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
   Widget build(BuildContext context) {
     final dateFmt = DateFormat('yyyy-MM-dd');
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Бронирование: ${widget.room.title}', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 12),
-          Form(
-            key: _formKey,
-            child: Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextFormField(
-                      controller: _nameCtrl,
-                      decoration: const InputDecoration(labelText: 'Имя гостя'),
-                      validator: (v) {
-                        if (StringHelpers.isNullOrEmpty(v)) return 'Введите имя';
-                        if (!ValidationHelpers.hasMinLength(v!, 2)) return 'Имя должно содержать минимум 2 символа';
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.arrow_back)),
+        title: const Text('Бронирование'),
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Номер: ${widget.room.title}', style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 12),
+              Expanded(
+                child: Form(
+                  key: _formKey,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: InkWell(
-                            onTap: () => _pickDate(context, true),
-                            child: InputDecorator(
-                              decoration: const InputDecoration(labelText: 'Дата заезда'),
-                              child: Text(_checkIn == null ? 'Выберите дату' : DateHelpers.formatDate(_checkIn!)),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: InkWell(
-                            onTap: () => _pickDate(context, false),
-                            child: InputDecorator(
-                              decoration: const InputDecoration(labelText: 'Дата выезда'),
-                              child: Text(_checkOut == null ? 'Выберите дату' : DateHelpers.formatDate(_checkOut!)),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            if (!_formKey.currentState!.validate()) return;
-                            if (_checkIn == null || _checkOut == null) {
-                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Выберите даты')));
-                              return;
-                            }
-                            if (!_checkOut!.isAfter(_checkIn!)) {
-                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Дата выезда должна быть позже даты заезда')));
-                              return;
-                            }
-                            widget.onSave(_nameCtrl.text.trim(), _checkIn!, _checkOut!);
+                        TextFormField(
+                          controller: _nameCtrl,
+                          decoration: const InputDecoration(labelText: 'Имя гостя'),
+                          validator: (v) {
+                            if (StringHelpers.isNullOrEmpty(v)) return 'Введите имя';
+                            if (!ValidationHelpers.hasMinLength(v!, 2)) return 'Имя должно содержать минимум 2 символа';
+                            return null;
                           },
-                          icon: const Icon(Icons.check),
-                          label: const Text('Подтвердить')),
-                        const SizedBox(width: 12),
-                        TextButton(onPressed: widget.onCancel, child: const Text('Отмена'))
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: InkWell(
+                                onTap: () => _pickDate(context, true),
+                                child: InputDecorator(
+                                  decoration: const InputDecoration(labelText: 'Дата заезда'),
+                                  child: Text(_checkIn == null ? 'Выберите дату' : DateHelpers.formatDate(_checkIn!)),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: InkWell(
+                                onTap: () => _pickDate(context, false),
+                                child: InputDecorator(
+                                  decoration: const InputDecoration(labelText: 'Дата выезда'),
+                                  child: Text(_checkOut == null ? 'Выберите дату' : DateHelpers.formatDate(_checkOut!)),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                if (!_formKey.currentState!.validate()) return;
+                                if (_checkIn == null || _checkOut == null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Выберите даты')));
+                                  return;
+                                }
+                                if (!_checkOut!.isAfter(_checkIn!)) {
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Дата выезда должна быть позже даты заезда')));
+                                  return;
+                                }
+                                widget.onSave(_nameCtrl.text.trim(), _checkIn!, _checkOut!);
+                              },
+                              icon: const Icon(Icons.check),
+                              label: const Text('Подтвердить'),
+                            ),
+                            const SizedBox(width: 12),
+                            TextButton(onPressed: widget.onCancel, child: const Text('Отмена'))
+                          ],
+                        )
                       ],
-                    )
-                  ],
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          )
-        ],
+              )
+            ],
+          ),
+        ),
       ),
     );
   }
