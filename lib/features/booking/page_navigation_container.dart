@@ -7,38 +7,37 @@ import 'screens/profile_screen.dart';
 import 'screens/settings_screen.dart';
 import 'models/room.dart';
 import 'models/booking.dart';
+import 'models/booking_repository.dart';
 
 class PageNavigationContainer extends StatefulWidget {
-  const PageNavigationContainer({Key? key}) : super(key: key);
+  final int initialIndex;
+  const PageNavigationContainer({Key? key, this.initialIndex = 0}) : super(key: key);
 
   @override
   State<PageNavigationContainer> createState() => _PageNavigationContainerState();
 }
 
 class _PageNavigationContainerState extends State<PageNavigationContainer> {
-  final PageController _pageController = PageController();
   int _currentPageIndex = 0;
+  bool _priceAsc = true;
 
-  // Данные приложения
-  final List<Room> _rooms = [
-    Room(id: 'r1', title: 'Стандартный однокомнатный', price: 50.0, beds: 1, amenities: ['Wi-Fi', 'Телевизор']),
-    Room(id: 'r2', title: 'Двухместный улучшенный', price: 80.0, beds: 2, amenities: ['Wi-Fi', 'Кондиционер']),
-    Room(id: 'r3', title: 'Люкс', price: 150.0, beds: 2, amenities: ['Wi-Fi', 'Кондиционер', 'Мини-бар']),
-    Room(id: 'r4', title: 'Семейный номер', price: 120.0, beds: 3, amenities: ['Wi-Fi', 'Кондиционер', 'Балкон', 'Детская кроватка']),
-    Room(id: 'r5', title: 'Президентский люкс', price: 300.0, beds: 2, amenities: ['Wi-Fi', 'Кондиционер', 'Мини-бар', 'Джакузи', 'Панорамные окна', 'Персональный консьерж']),
-  ];
-
-  List<Booking> _bookings = [];
+  // Репозиторий для сохранения состояния между заменами маршрутов
+  final BookingRepository _repo = BookingRepository.instance;
   Room? _selectedRoomForBooking;
 
+  @override
+  void initState() {
+    super.initState();
+    _currentPageIndex = widget.initialIndex;
+  }
+
   void _navigateToPage(int index) {
-    setState(() {
-      _currentPageIndex = index;
-    });
-    _pageController.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
+    if (index == _currentPageIndex) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PageNavigationContainer(initialIndex: index),
+      ),
     );
   }
 
@@ -72,18 +71,15 @@ class _PageNavigationContainerState extends State<PageNavigationContainer> {
     );
 
     setState(() {
-      _bookings = [..._bookings, newBooking];
-      final roomIndex = _rooms.indexWhere((r) => r.id == room.id);
-      if (roomIndex != -1) {
-        _rooms[roomIndex] = _rooms[roomIndex].copyWith(isBooked: true);
-      }
-      _currentPageIndex = 2; // перейти на вкладку Брони
+      _repo.addBooking(newBooking);
     });
 
-    _pageController.animateToPage(
-      2,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
+    // перейти на вкладку «Брони» без сохранения текущей
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const PageNavigationContainer(initialIndex: 2),
+      ),
     );
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -93,17 +89,7 @@ class _PageNavigationContainerState extends State<PageNavigationContainer> {
 
   void _cancelBooking(String bookingId) {
     setState(() {
-      final idx = _bookings.indexWhere((b) => b.id == bookingId);
-      if (idx != -1) {
-        final roomId = _bookings[idx].roomId;
-        _bookings.removeAt(idx);
-        final roomIndex = _rooms.indexWhere((r) => r.id == roomId);
-        if (roomIndex != -1) {
-          // Освободить номер, если больше нет активных бронирований для него
-          final stillBooked = _bookings.any((b) => b.roomId == roomId);
-          _rooms[roomIndex] = _rooms[roomIndex].copyWith(isBooked: stillBooked);
-        }
-      }
+      _repo.cancelBooking(bookingId);
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -111,52 +97,46 @@ class _PageNavigationContainerState extends State<PageNavigationContainer> {
     );
   }
 
+  Widget _buildBody() {
+    switch (_currentPageIndex) {
+      case 0:
+        return HomeScreen(
+          onShowRooms: () => _navigateToPage(1),
+          onShowBookings: () => _navigateToPage(2),
+          onShowProfile: () => _navigateToPage(3),
+          onShowSettings: () => _navigateToPage(4),
+        );
+      case 1:
+        return RoomListScreen(
+          rooms: _repo.roomsSortedByPrice(_priceAsc),
+          onBook: _showBookingForm,
+          onOpenBookings: () => _navigateToPage(2),
+          priceAsc: _priceAsc,
+          onToggleSort: () => setState(() => _priceAsc = !_priceAsc),
+        );
+      case 2:
+        return BookingListScreen(
+          bookings: _repo.bookings,
+          rooms: _repo.rooms,
+          onCancelBooking: _cancelBooking,
+        );
+      case 3:
+        return ProfileScreen(
+          onBack: () => _navigateToPage(0),
+        );
+      case 4:
+        return SettingsScreen(
+          onBack: () => _navigateToPage(0),
+        );
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: (index) {
-          setState(() {
-            _currentPageIndex = index;
-          });
-        },
-        children: [
-          // 1. Главная
-          HomeScreen(
-            onShowRooms: () => _navigateToPage(1),
-            onShowBookings: () => _navigateToPage(2),
-            onShowProfile: () => _navigateToPage(3),
-            onShowSettings: () => _navigateToPage(4),
-          ),
-
-          // 2. Список номеров
-          RoomListScreen(
-            rooms: _rooms,
-            onBook: _showBookingForm,
-            onOpenBookings: () => _navigateToPage(2),
-          ),
-
-          // 3. Бронирования
-          BookingListScreen(
-            bookings: _bookings,
-            rooms: _rooms,
-            onCancelBooking: _cancelBooking,
-          ),
-
-          // 4. Профиль
-          ProfileScreen(
-            onBack: () => _navigateToPage(0),
-          ),
-
-          // 5. Настройки
-          SettingsScreen(
-            onBack: () => _navigateToPage(0),
-          ),
-        ],
-      ),
-
-      // Bottom Navigation Bar для вертикальной навигации
+      body: _buildBody(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentPageIndex,
         onTap: _navigateToPage,
@@ -174,7 +154,6 @@ class _PageNavigationContainerState extends State<PageNavigationContainer> {
 
   @override
   void dispose() {
-    _pageController.dispose();
     super.dispose();
   }
 }
