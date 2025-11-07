@@ -1,24 +1,20 @@
 import 'package:flutter/material.dart';
-import 'features/booking/booking_container.dart';
-import 'package:local_utils/local_utils.dart';
+import 'package:flutter_5/app/app_router.dart';
 
 void main() {
   runApp(const BookingApp());
 }
 
 class BookingApp extends StatelessWidget {
-  const BookingApp({Key? key}) : super(key: key);
+  const BookingApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Hotel Booking',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-      ),
-      home: const BookingContainer(),
+    return MaterialApp.router(
+      debugShowCheckedModeBanner: false,
+      title: 'Booking App',
+      theme: ThemeData(useMaterial3: true),
+      routerConfig: appRouter,
     );
   }
 }
-
-

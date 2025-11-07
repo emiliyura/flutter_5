@@ -1,37 +1,67 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../booking/models/room.dart';
+import '../../booking/models/booking.dart';
+import '../../booking/models/app_data.dart';
 import '../widgets/room_card.dart';
+import 'booking_list_screen.dart';
 
-class RoomListScreen extends StatelessWidget {
-  final List<Room> rooms;
-  final ValueChanged<Room> onBook;
-  final VoidCallback onOpenBookings;
+class RoomListScreen extends StatefulWidget {
+  const RoomListScreen({super.key});
 
-  const RoomListScreen({Key? key, required this.rooms, required this.onBook, required this.onOpenBookings}) : super(key: key);
+  @override
+  State<RoomListScreen> createState() => _RoomListScreenState();
+}
+
+class _RoomListScreenState extends State<RoomListScreen> {
+  bool _priceAsc = true;
+
+  void _toggleSort() {
+    setState(() {
+      _priceAsc = !_priceAsc;
+    });
+  }
+
+  void _onBook(Room room) {
+    context.go('/booking/step1/${room.id}');
+  }
+
+  void _onOpenBookings() {
+    context.push('/bookings');
+  }
+
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Row(
-            children: [
-              Expanded(child: Text('Доступные номера', style: Theme.of(context).textTheme.titleLarge)),
-              ElevatedButton.icon(onPressed: onOpenBookings, icon: const Icon(Icons.list), label: const Text('Мои брони'))
-            ],
-          ),
+    final rooms = AppData.getRoomsSortedByPrice(_priceAsc);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Номера'),
+        leading: IconButton(
+          onPressed: () => context.pop(),
+          icon: const Icon(Icons.arrow_back),
         ),
-        Expanded(
-          child: ListView.builder(
-            itemCount: rooms.length,
-            itemBuilder: (context, index) {
-              final r = rooms[index];
-              return RoomCard(room: r, onBook: onBook);
-            },
+        actions: [
+          IconButton(
+            tooltip: _priceAsc ? 'Цена: по возрастанию' : 'Цена: по убыванию',
+            onPressed: _toggleSort,
+            icon: Icon(_priceAsc ? Icons.arrow_upward : Icons.arrow_downward),
           ),
-        ),
-      ],
+          IconButton(
+            tooltip: 'Мои бронирования',
+            onPressed: _onOpenBookings,
+            icon: const Icon(Icons.list),
+          ),
+        ],
+      ),
+      body: ListView.builder(
+        itemCount: rooms.length,
+        itemBuilder: (context, index) {
+          final r = rooms[index];
+          return RoomCard(room: r, onBook: _onBook);
+        },
+      ),
     );
   }
 }

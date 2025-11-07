@@ -1,50 +1,68 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../booking/models/booking.dart';
 import '../../booking/models/room.dart';
+import '../../booking/models/app_data.dart';
 import '../widgets/booking_item.dart';
 
-class BookingListScreen extends StatelessWidget {
-  final List<Booking> bookings;
-  final List<Room> rooms;
-  final void Function(String bookingId) onCancelBooking;
-  final VoidCallback onBack;
+class BookingListScreen extends StatefulWidget {
+  const BookingListScreen({super.key});
 
-  const BookingListScreen({Key? key, required this.bookings, required this.rooms, required this.onCancelBooking, required this.onBack}) : super(key: key);
+  @override
+  State<BookingListScreen> createState() => _BookingListScreenState();
+}
+
+class _BookingListScreenState extends State<BookingListScreen> {
+  void _cancelBooking(String bookingId) {
+    setState(() {
+      AppData.cancelBooking(bookingId);
+    });
+  }
+
+  void _navigateToRooms() {
+    context.push('/rooms');
+  }
+
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Row(
-            children: [
-              IconButton(onPressed: onBack, icon: const Icon(Icons.arrow_back)),
-              Expanded(child: Text('Мои бронирования', style: Theme.of(context).textTheme.titleLarge)),
-            ],
-          ),
+    final bookings = AppData.bookings;
+    final rooms = AppData.rooms;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Мои бронирования'),
+        leading: IconButton(
+          onPressed: () => context.pop(),
+          icon: const Icon(Icons.arrow_back),
         ),
-        Expanded(
-          child: bookings.isEmpty
-              ? _buildEmptyState()
-              : ListView.builder(
-                  itemCount: bookings.length,
-                  itemBuilder: (context, idx) {
-                    final b = bookings[idx];
-                    final room = rooms.firstWhere(
-                      (r) => r.id == b.roomId,
-                      orElse: () => Room(id: 'x', title: 'Неизвестно', price: 0, beds: 0),
-                    );
-                    return BookingItem(
-                      booking: b,
-                      room: room,
-                      onCancel: () => onCancelBooking(b.id),
-                    );
-                  },
-                ),
-        )
-      ],
+        actions: [
+          IconButton(
+            tooltip: 'Номера',
+            onPressed: _navigateToRooms,
+            icon: const Icon(Icons.hotel),
+          ),
+        ],
+      ),
+      body: bookings.isEmpty
+          ? _buildEmptyState()
+          : ListView.builder(
+              padding: const EdgeInsets.all(12.0),
+              itemCount: bookings.length,
+              itemBuilder: (context, idx) {
+                final b = bookings[idx];
+                final room = rooms.firstWhere(
+                  (r) => r.id == b.roomId,
+                  orElse: () => Room(id: 'x', title: 'Неизвестно', price: 0, beds: 0),
+                );
+                return BookingItem(
+                  booking: b,
+                  room: room,
+                  onCancel: () => _cancelBooking(b.id),
+                );
+              },
+            ),
     );
   }
 
