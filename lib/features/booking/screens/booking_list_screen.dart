@@ -2,17 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../booking/models/booking.dart';
 import '../../booking/models/room.dart';
+import '../../booking/models/app_data.dart';
 import '../widgets/booking_item.dart';
 
-class BookingListScreen extends StatelessWidget {
-  final List<Booking> bookings;
-  final List<Room> rooms;
-  final void Function(String bookingId) onCancelBooking;
+class BookingListScreen extends StatefulWidget {
+  const BookingListScreen({super.key});
 
-  const BookingListScreen({Key? key, required this.bookings, required this.rooms, required this.onCancelBooking}) : super(key: key);
+  @override
+  State<BookingListScreen> createState() => _BookingListScreenState();
+}
+
+class _BookingListScreenState extends State<BookingListScreen> {
+  void _cancelBooking(String bookingId) {
+    setState(() {
+      AppData.cancelBooking(bookingId);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final bookings = AppData.bookings;
+    final rooms = AppData.rooms;
+
     return Column(
       children: [
         Padding(
@@ -36,7 +47,7 @@ class BookingListScreen extends StatelessWidget {
                     return BookingItem(
                       booking: b,
                       room: room,
-                      onCancel: () => onCancelBooking(b.id),
+                      onCancel: () => _cancelBooking(b.id),
                     );
                   },
                 ),
