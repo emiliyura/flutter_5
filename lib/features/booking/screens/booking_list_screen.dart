@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../booking/models/booking.dart';
 import '../../booking/models/room.dart';
 import '../../booking/models/app_data.dart';
 import '../widgets/booking_item.dart';
-import 'room_list_screen.dart';
 
 class BookingListScreen extends StatefulWidget {
   const BookingListScreen({super.key});
@@ -21,12 +21,7 @@ class _BookingListScreenState extends State<BookingListScreen> {
   }
 
   void _navigateToRooms() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const RoomListScreen(),
-      ),
-    );
+    context.push('/rooms');
   }
 
 
@@ -39,7 +34,7 @@ class _BookingListScreenState extends State<BookingListScreen> {
       appBar: AppBar(
         title: const Text('Мои бронирования'),
         leading: IconButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
           icon: const Icon(Icons.arrow_back),
         ),
         actions: [

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:local_utils/local_utils.dart';
 import '../../booking/models/room.dart';
 import 'booking_step_indicator.dart';
-import 'booking_step2_screen.dart';
 
 class BookingStep1Screen extends StatefulWidget {
   final Room room;
@@ -61,16 +61,10 @@ class _BookingStep1ScreenState extends State<BookingStep1Screen> {
       );
       return;
     }
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => BookingStep2Screen(
-          room: widget.room,
-          initialCheckIn: _checkIn!,
-          initialCheckOut: _checkOut!,
-        ),
-      ),
-    );
+    final path = '/booking/step2/${widget.room.id}';
+    final checkInStr = Uri.encodeComponent(_checkIn!.toIso8601String());
+    final checkOutStr = Uri.encodeComponent(_checkOut!.toIso8601String());
+    context.go('$path?checkIn=$checkInStr&checkOut=$checkOutStr');
   }
 
   @override
@@ -78,7 +72,7 @@ class _BookingStep1ScreenState extends State<BookingStep1Screen> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
           icon: const Icon(Icons.arrow_back),
         ),
         title: const Text('Бронирование - Шаг 1'),
@@ -131,7 +125,7 @@ class _BookingStep1ScreenState extends State<BookingStep1Screen> {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           TextButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () => context.pop(),
                             child: const Text('Отмена'),
                           ),
                           const SizedBox(width: 12),

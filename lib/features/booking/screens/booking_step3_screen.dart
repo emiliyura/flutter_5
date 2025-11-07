@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:local_utils/local_utils.dart';
 import '../../booking/models/room.dart';
 import '../../booking/models/booking.dart';
 import '../../booking/models/app_data.dart';
 import 'booking_step_indicator.dart';
-import 'booking_step2_screen.dart';
 import 'booking_list_screen.dart';
 
 class BookingStep3Screen extends StatelessWidget {
@@ -22,17 +22,11 @@ class BookingStep3Screen extends StatelessWidget {
   });
 
   void _goToStep2(BuildContext context) {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => BookingStep2Screen(
-          room: room,
-          initialGuestName: guestName,
-          initialCheckIn: checkIn,
-          initialCheckOut: checkOut,
-        ),
-      ),
-    );
+    final path = '/booking/step2/${room.id}';
+    final checkInStr = Uri.encodeComponent(checkIn.toIso8601String());
+    final checkOutStr = Uri.encodeComponent(checkOut.toIso8601String());
+    final guestNameStr = Uri.encodeComponent(guestName);
+    context.go('$path?checkIn=$checkInStr&checkOut=$checkOutStr&guestName=$guestNameStr');
   }
 
   void _saveBooking(BuildContext context) {
@@ -44,15 +38,7 @@ class BookingStep3Screen extends StatelessWidget {
       checkOut: checkOut,
     );
     AppData.addBooking(booking);
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => Scaffold(
-          appBar: AppBar(title: const Text('Мои бронирования')),
-          body: const BookingListScreen(),
-        ),
-      ),
-    );
+    context.go('/bookings');
   }
 
   @override

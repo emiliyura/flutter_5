@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:local_utils/local_utils.dart';
 import '../../booking/models/room.dart';
 import 'booking_step_indicator.dart';
-import 'booking_step1_screen.dart';
-import 'booking_step3_screen.dart';
 
 class BookingStep2Screen extends StatefulWidget {
   final Room room;
@@ -34,12 +33,7 @@ class _BookingStep2ScreenState extends State<BookingStep2Screen> {
   }
 
   void _goToStep1() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => BookingStep1Screen(room: widget.room),
-      ),
-    );
+    context.go('/booking/step1/${widget.room.id}');
   }
 
   @override
@@ -50,17 +44,11 @@ class _BookingStep2ScreenState extends State<BookingStep2Screen> {
 
   void _handleNext() {
     if (!_formKey.currentState!.validate()) return;
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => BookingStep3Screen(
-          room: widget.room,
-          guestName: _nameCtrl.text.trim(),
-          checkIn: widget.initialCheckIn,
-          checkOut: widget.initialCheckOut,
-        ),
-      ),
-    );
+    final path = '/booking/step3/${widget.room.id}';
+    final checkInStr = widget.initialCheckIn.toIso8601String();
+    final checkOutStr = widget.initialCheckOut.toIso8601String();
+    final guestNameStr = Uri.encodeComponent(_nameCtrl.text.trim());
+    context.go('$path?checkIn=${Uri.encodeComponent(checkInStr)}&checkOut=${Uri.encodeComponent(checkOutStr)}&guestName=$guestNameStr');
   }
 
   @override

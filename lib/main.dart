@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_5/features/booking/screens/home_screen.dart';
+import 'package:flutter_5/app/app_router.dart';
 
 void main() {
   runApp(const BookingApp());
@@ -10,11 +10,11 @@ class BookingApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'Booking App',
       theme: ThemeData(useMaterial3: true),
-      home: const HomeScreen(),
+      routerConfig: appRouter,
     );
   }
 }

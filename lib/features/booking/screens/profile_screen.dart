@@ -1,37 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../booking/models/app_data.dart';
-import 'settings_screen.dart';
-import 'room_list_screen.dart';
-import 'booking_list_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   void _navigateToSettings(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const SettingsScreen(),
-      ),
-    );
+    context.push('/settings');
   }
 
   void _navigateToRooms(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const RoomListScreen(),
-      ),
-    );
+    context.push('/rooms');
   }
 
   void _navigateToBookings(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const BookingListScreen(),
-      ),
-    );
+    context.push('/bookings');
   }
 
   @override
@@ -42,7 +25,7 @@ class ProfileScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Профиль'),
         leading: IconButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
           icon: const Icon(Icons.arrow_back),
         ),
       ),

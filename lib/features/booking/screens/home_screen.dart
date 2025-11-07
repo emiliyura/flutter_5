@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../booking/models/app_data.dart';
-import 'room_list_screen.dart';
-import 'booking_list_screen.dart';
-import 'profile_screen.dart';
-import 'settings_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -86,12 +83,7 @@ class HomeScreen extends StatelessWidget {
               'Выберите номер для бронирования',
               Icons.hotel,
               Colors.blue,
-              () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const RoomListScreen(),
-                ),
-              ),
+              () => context.push('/rooms'),
             ),
             const SizedBox(height: 12),
             _buildQuickActionCard(
@@ -100,12 +92,7 @@ class HomeScreen extends StatelessWidget {
               'Управляйте своими бронированиями',
               Icons.list_alt,
               Colors.orange,
-              () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const BookingListScreen(),
-                ),
-              ),
+              () => context.push('/bookings'),
             ),
             const SizedBox(height: 12),
             _buildQuickActionCard(
@@ -114,10 +101,7 @@ class HomeScreen extends StatelessWidget {
               'Информация о вашем аккаунте',
               Icons.person,
               Colors.purple,
-              () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ProfileScreen()),
-              ),
+              () => context.push('/profile'),
             ),
             const SizedBox(height: 12),
             _buildQuickActionCard(
@@ -126,10 +110,7 @@ class HomeScreen extends StatelessWidget {
               'Настройки приложения',
               Icons.settings,
               Colors.grey,
-              () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              ),
+              () => context.push('/settings'),
             ),
             const SizedBox(height: 12),
             _buildQuickActionCard(
@@ -192,7 +173,7 @@ class HomeScreen extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => context.pop(),
             child: const Text('Закрыть'),
           ),
         ],

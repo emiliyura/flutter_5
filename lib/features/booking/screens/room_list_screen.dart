@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../booking/models/room.dart';
 import '../../booking/models/booking.dart';
 import '../../booking/models/app_data.dart';
 import '../widgets/room_card.dart';
 import 'booking_list_screen.dart';
-import 'booking_step1_screen.dart';
-import 'booking_step2_screen.dart';
-import 'booking_step3_screen.dart';
 
 class RoomListScreen extends StatefulWidget {
   const RoomListScreen({super.key});
@@ -25,21 +23,11 @@ class _RoomListScreenState extends State<RoomListScreen> {
   }
 
   void _onBook(Room room) {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => BookingStep1Screen(room: room),
-      ),
-    );
+    context.go('/booking/step1/${room.id}');
   }
 
   void _onOpenBookings() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const BookingListScreen(),
-      ),
-    );
+    context.push('/bookings');
   }
 
 
@@ -51,7 +39,7 @@ class _RoomListScreenState extends State<RoomListScreen> {
       appBar: AppBar(
         title: const Text('Номера'),
         leading: IconButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
           icon: const Icon(Icons.arrow_back),
         ),
         actions: [
