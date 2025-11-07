@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_5/core/service_locator.dart';
 import '../../booking/models/room.dart';
-import '../../booking/models/booking.dart';
-import '../../booking/models/app_data.dart';
 import '../widgets/room_card.dart';
 import 'booking_list_screen.dart';
 
+/// Страница списка номеров - демонстрирует использование GetIt
+/// для получения списка номеров
 class RoomListScreen extends StatefulWidget {
   const RoomListScreen({super.key});
 
@@ -33,7 +34,10 @@ class _RoomListScreenState extends State<RoomListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final rooms = AppData.getRoomsSortedByPrice(_priceAsc);
+    // Получаем список номеров через GetIt
+    final allRooms = getIt<List<Room>>();
+    final rooms = List<Room>.from(allRooms);
+    rooms.sort((a, b) => _priceAsc ? a.price.compareTo(b.price) : b.price.compareTo(a.price));
 
     return Scaffold(
       appBar: AppBar(

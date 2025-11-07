@@ -1,14 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../booking/models/app_data.dart';
+import 'package:flutter_5/core/service_locator.dart';
+import 'package:flutter_5/shared/services/app_config_service.dart';
+import 'package:flutter_5/shared/state/booking_state.dart';
+import '../../booking/models/room.dart';
 
+/// Главная страница - демонстрирует использование GetIt и InheritedWidget
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final totalRooms = AppData.rooms.length;
-    final totalBookings = AppData.bookings.length;
+    // Получаем конфигурацию через GetIt DI контейнер
+    final appConfig = getIt<AppConfigService>();
+    
+    // Получаем состояние через InheritedWidget
+    final bookingState = BookingStateProvider.of(context);
+    final totalBookings = bookingState.totalBookings;
+    
+    // Получаем список номеров через GetIt
+    final rooms = getIt<List<Room>>();
+    final totalRooms = rooms.length;
     final availableRooms = totalRooms - totalBookings;
 
     return Scaffold(
@@ -70,6 +82,29 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 32),
+            // Информация из GetIt
+            Card(
+              color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Приложение: ${appConfig.fullAppName}',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
             Text(
               'Быстрый доступ',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -128,6 +163,9 @@ class HomeScreen extends StatelessWidget {
   }
 
   void _showHelpDialog(BuildContext context) {
+    // Получаем конфигурацию через GetIt
+    final appConfig = getIt<AppConfigService>();
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -138,14 +176,14 @@ class HomeScreen extends StatelessWidget {
             Text('Справка'),
           ],
         ),
-        content: const SingleChildScrollView(
+        content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Приложение для бронирования номеров',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                appConfig.appInfo,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
               SizedBox(height: 12),
               Text('Основные возможности:'),
@@ -165,7 +203,7 @@ class HomeScreen extends StatelessWidget {
               Text('Для быстрого доступа используйте карточки на главном экране.'),
               SizedBox(height: 12),
               Text(
-                'Версия: 1.0.0',
+                'Версия: ${appConfig.appVersion}',
                 style: TextStyle(fontSize: 12, color: Colors.grey),
               ),
             ],

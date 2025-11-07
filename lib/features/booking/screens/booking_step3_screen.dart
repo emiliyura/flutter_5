@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:local_utils/local_utils.dart';
+import 'package:flutter_5/shared/state/booking_state.dart';
 import '../../booking/models/room.dart';
 import '../../booking/models/booking.dart';
-import '../../booking/models/app_data.dart';
 import 'booking_step_indicator.dart';
 import 'booking_list_screen.dart';
 
+/// Страница подтверждения бронирования - демонстрирует использование InheritedWidget
+/// для сохранения бронирования через BookingStateProvider
 class BookingStep3Screen extends StatelessWidget {
   final Room room;
   final String guestName;
@@ -30,6 +32,8 @@ class BookingStep3Screen extends StatelessWidget {
   }
 
   void _saveBooking(BuildContext context) {
+    // Получаем состояние через InheritedWidget и сохраняем бронирование
+    final bookingState = BookingStateProvider.of(context);
     final booking = Booking(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       roomId: room.id,
@@ -37,7 +41,7 @@ class BookingStep3Screen extends StatelessWidget {
       checkIn: checkIn,
       checkOut: checkOut,
     );
-    AppData.addBooking(booking);
+    bookingState.addBooking(booking);
     context.go('/bookings');
   }
 

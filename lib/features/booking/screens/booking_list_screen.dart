@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_5/core/service_locator.dart';
+import 'package:flutter_5/shared/state/booking_state.dart';
 import '../../booking/models/booking.dart';
 import '../../booking/models/room.dart';
-import '../../booking/models/app_data.dart';
 import '../widgets/booking_item.dart';
 
+/// Страница списка бронирований - демонстрирует использование InheritedWidget
+/// для получения состояния через BookingStateProvider
 class BookingListScreen extends StatefulWidget {
   const BookingListScreen({super.key});
 
@@ -15,9 +18,9 @@ class BookingListScreen extends StatefulWidget {
 
 class _BookingListScreenState extends State<BookingListScreen> {
   void _cancelBooking(String bookingId) {
-    setState(() {
-      AppData.cancelBooking(bookingId);
-    });
+    // Получаем состояние через InheritedWidget
+    final bookingState = BookingStateProvider.of(context);
+    bookingState.cancelBooking(bookingId);
   }
 
   void _navigateToRooms() {
@@ -27,8 +30,11 @@ class _BookingListScreenState extends State<BookingListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bookings = AppData.bookings;
-    final rooms = AppData.rooms;
+    // Получаем состояние через InheritedWidget
+    final bookingState = BookingStateProvider.of(context);
+    
+    // Получаем список номеров через GetIt
+    final rooms = getIt<List<Room>>();
 
     return Scaffold(
       appBar: AppBar(
@@ -45,7 +51,13 @@ class _BookingListScreenState extends State<BookingListScreen> {
           ),
         ],
       ),
-      body: bookings.isEmpty
+      // Используем ListenableBuilder для автоматического обновления при изменении состояния
+      body: ListenableBuilder(
+        listenable: bookingState,
+        builder: (context, child) {
+          final bookings = bookingState.bookings;
+          
+          return bookings.isEmpty
           ? _buildEmptyState()
           : ListView.builder(
               padding: const EdgeInsets.all(12.0),
@@ -60,6 +72,8 @@ class _BookingListScreenState extends State<BookingListScreen> {
                   booking: b,
                   room: room,
                   onCancel: () => _cancelBooking(b.id),
+                    );
+                  },
                 );
               },
             ),

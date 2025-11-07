@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_5/core/service_locator.dart';
+import 'package:flutter_5/shared/services/app_config_service.dart';
 import 'package:flutter_5/features/booking/screens/home_screen.dart';
 import 'package:flutter_5/features/booking/screens/room_list_screen.dart';
 import 'package:flutter_5/features/booking/screens/booking_list_screen.dart';
@@ -41,6 +43,9 @@ class _RootShellState extends State<RootShell> {
 
   @override
   Widget build(BuildContext context) {
+    // Демонстрация использования GetIt для получения конфигурации
+    final appConfig = getIt<AppConfigService>();
+    
     return Scaffold(
       body: _pages[_currentIndex],
       drawer: Drawer(
@@ -62,9 +67,16 @@ class _RootShellState extends State<RootShell> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Бронирование номеров',
+                    appConfig.appName,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           color: Theme.of(context).colorScheme.onPrimary,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Версия: ${appConfig.appVersion}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.8),
                         ),
                   ),
                 ],
