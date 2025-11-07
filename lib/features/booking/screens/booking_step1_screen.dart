@@ -71,10 +71,7 @@ class _BookingStep1ScreenState extends State<BookingStep1Screen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          onPressed: () => context.pop(),
-          icon: const Icon(Icons.arrow_back),
-        ),
+        automaticallyImplyLeading: false,
         title: const Text('Бронирование - Шаг 1'),
       ),
       body: SafeArea(
@@ -124,11 +121,6 @@ class _BookingStep1ScreenState extends State<BookingStep1Screen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          TextButton(
-                            onPressed: () => context.pop(),
-                            child: const Text('Отмена'),
-                          ),
-                          const SizedBox(width: 12),
                           ElevatedButton.icon(
                             onPressed: _handleNext,
                             icon: const Icon(Icons.arrow_forward),
