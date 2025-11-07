@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:local_utils/local_utils.dart';
 import '../../booking/models/room.dart';
 import 'booking_step_indicator.dart';
+import 'booking_step2_screen.dart';
 
 class BookingStep1Screen extends StatefulWidget {
   final Room room;
-  final void Function(String guestName, DateTime checkIn, DateTime checkOut) onNext;
-  final VoidCallback onCancel;
 
   const BookingStep1Screen({
     super.key,
     required this.room,
-    required this.onNext,
-    required this.onCancel,
   });
 
   @override
@@ -65,7 +61,16 @@ class _BookingStep1ScreenState extends State<BookingStep1Screen> {
       );
       return;
     }
-    widget.onNext('', _checkIn!, _checkOut!);
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BookingStep2Screen(
+          room: widget.room,
+          initialCheckIn: _checkIn!,
+          initialCheckOut: _checkOut!,
+        ),
+      ),
+    );
   }
 
   @override
@@ -73,7 +78,7 @@ class _BookingStep1ScreenState extends State<BookingStep1Screen> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          onPressed: () => context.pop(),
+          onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.arrow_back),
         ),
         title: const Text('Бронирование - Шаг 1'),
@@ -126,7 +131,7 @@ class _BookingStep1ScreenState extends State<BookingStep1Screen> {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           TextButton(
-                            onPressed: widget.onCancel,
+                            onPressed: () => Navigator.pop(context),
                             child: const Text('Отмена'),
                           ),
                           const SizedBox(width: 12),

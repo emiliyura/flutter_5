@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../../booking/models/room.dart';
+import '../../booking/models/booking.dart';
 import '../../booking/models/app_data.dart';
 import '../widgets/room_card.dart';
+import 'booking_list_screen.dart';
+import 'booking_step1_screen.dart';
+import 'booking_step2_screen.dart';
+import 'booking_step3_screen.dart';
 
 class RoomListScreen extends StatefulWidget {
   const RoomListScreen({super.key});
@@ -21,52 +25,55 @@ class _RoomListScreenState extends State<RoomListScreen> {
   }
 
   void _onBook(Room room) {
-    context.pushNamed('bookingStep1', pathParameters: {'roomId': room.id});
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BookingStep1Screen(room: room),
+      ),
+    );
   }
 
   void _onOpenBookings() {
-    context.goNamed('bookings');
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const BookingListScreen(),
+      ),
+    );
   }
+
 
   @override
   Widget build(BuildContext context) {
     final rooms = AppData.getRoomsSortedByPrice(_priceAsc);
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Доступные номера',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-              ),
-              IconButton(
-                tooltip: _priceAsc ? 'Цена: по возрастанию' : 'Цена: по убыванию',
-                onPressed: _toggleSort,
-                icon: Icon(_priceAsc ? Icons.arrow_upward : Icons.arrow_downward),
-              ),
-              ElevatedButton.icon(
-                onPressed: _onOpenBookings,
-                icon: const Icon(Icons.list),
-                label: const Text('Мои брони'),
-              ),
-            ],
-          ),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Номера'),
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back),
         ),
-        Expanded(
-          child: ListView.builder(
-            itemCount: rooms.length,
-            itemBuilder: (context, index) {
-              final r = rooms[index];
-              return RoomCard(room: r, onBook: _onBook);
-            },
+        actions: [
+          IconButton(
+            tooltip: _priceAsc ? 'Цена: по возрастанию' : 'Цена: по убыванию',
+            onPressed: _toggleSort,
+            icon: Icon(_priceAsc ? Icons.arrow_upward : Icons.arrow_downward),
           ),
-        ),
-      ],
+          IconButton(
+            tooltip: 'Мои бронирования',
+            onPressed: _onOpenBookings,
+            icon: const Icon(Icons.list),
+          ),
+        ],
+      ),
+      body: ListView.builder(
+        itemCount: rooms.length,
+        itemBuilder: (context, index) {
+          final r = rooms[index];
+          return RoomCard(room: r, onBook: _onBook);
+        },
+      ),
     );
   }
 }

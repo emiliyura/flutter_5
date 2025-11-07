@@ -1,25 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:local_utils/local_utils.dart';
 import '../../booking/models/room.dart';
 import 'booking_step_indicator.dart';
+import 'booking_step1_screen.dart';
+import 'booking_step3_screen.dart';
 
 class BookingStep2Screen extends StatefulWidget {
   final Room room;
   final String? initialGuestName;
-  final DateTime? initialCheckIn;
-  final DateTime? initialCheckOut;
-  final void Function(String guestName, DateTime checkIn, DateTime checkOut) onNext;
-  final VoidCallback onCancel;
+  final DateTime initialCheckIn;
+  final DateTime initialCheckOut;
 
   const BookingStep2Screen({
     super.key,
     required this.room,
     this.initialGuestName,
-    this.initialCheckIn,
-    this.initialCheckOut,
-    required this.onNext,
-    required this.onCancel,
+    required this.initialCheckIn,
+    required this.initialCheckOut,
   });
 
   @override
@@ -36,6 +33,15 @@ class _BookingStep2ScreenState extends State<BookingStep2Screen> {
     _nameCtrl = TextEditingController(text: widget.initialGuestName ?? '');
   }
 
+  void _goToStep1() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BookingStep1Screen(room: widget.room),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _nameCtrl.dispose();
@@ -44,13 +50,17 @@ class _BookingStep2ScreenState extends State<BookingStep2Screen> {
 
   void _handleNext() {
     if (!_formKey.currentState!.validate()) return;
-    if (widget.initialCheckIn == null || widget.initialCheckOut == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ошибка: даты не выбраны')),
-      );
-      return;
-    }
-    widget.onNext(_nameCtrl.text.trim(), widget.initialCheckIn!, widget.initialCheckOut!);
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BookingStep3Screen(
+          room: widget.room,
+          guestName: _nameCtrl.text.trim(),
+          checkIn: widget.initialCheckIn,
+          checkOut: widget.initialCheckOut,
+        ),
+      ),
+    );
   }
 
   @override
@@ -58,7 +68,7 @@ class _BookingStep2ScreenState extends State<BookingStep2Screen> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          onPressed: () => context.pop(),
+          onPressed: _goToStep1,
           icon: const Icon(Icons.arrow_back),
         ),
         title: const Text('Бронирование - Шаг 2'),
@@ -102,7 +112,7 @@ class _BookingStep2ScreenState extends State<BookingStep2Screen> {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           TextButton(
-                            onPressed: widget.onCancel,
+                            onPressed: _goToStep1,
                             child: const Text('Отмена'),
                           ),
                           const SizedBox(width: 12),

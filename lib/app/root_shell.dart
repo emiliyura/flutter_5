@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_5/features/booking/screens/home_screen.dart';
+import 'package:flutter_5/features/booking/screens/room_list_screen.dart';
+import 'package:flutter_5/features/booking/screens/booking_list_screen.dart';
+import 'package:flutter_5/features/booking/screens/profile_screen.dart';
+import 'package:flutter_5/features/booking/screens/settings_screen.dart';
 
 class RootShell extends StatefulWidget {
-  final Widget child;
-  const RootShell({super.key, required this.child});
+  const RootShell({super.key});
 
   @override
   State<RootShell> createState() => _RootShellState();
@@ -12,7 +15,14 @@ class RootShell extends StatefulWidget {
 class _RootShellState extends State<RootShell> {
   int _currentIndex = 0;
 
-  final List<String> _routes = ['/home', '/rooms', '/bookings', '/profile', '/settings'];
+  final List<Widget> _pages = const [
+    HomeScreen(),
+    RoomListScreen(),
+    BookingListScreen(),
+    ProfileScreen(),
+    SettingsScreen(),
+  ];
+
   final List<IconData> _icons = [
     Icons.home,
     Icons.hotel,
@@ -20,6 +30,7 @@ class _RootShellState extends State<RootShell> {
     Icons.person,
     Icons.settings,
   ];
+
   final List<String> _labels = [
     'Главная',
     'Номера',
@@ -28,21 +39,10 @@ class _RootShellState extends State<RootShell> {
     'Настройки',
   ];
 
-  int _getCurrentIndex(String location) {
-    if (location.startsWith('/rooms')) return 1;
-    if (location.startsWith('/bookings')) return 2;
-    if (location.startsWith('/profile')) return 3;
-    if (location.startsWith('/settings')) return 4;
-    return 0; // '/home'
-  }
-
   @override
   Widget build(BuildContext context) {
-    final location = GoRouterState.of(context).matchedLocation;
-    _currentIndex = _getCurrentIndex(location);
-
     return Scaffold(
-      body: widget.child,
+      body: _pages[_currentIndex],
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -70,7 +70,7 @@ class _RootShellState extends State<RootShell> {
                 ],
               ),
             ),
-            ...List.generate(_routes.length, (index) {
+            ...List.generate(_pages.length, (index) {
               final isSelected = _currentIndex == index;
               return ListTile(
                 leading: Icon(
@@ -84,7 +84,9 @@ class _RootShellState extends State<RootShell> {
                 selectedTileColor: Theme.of(context).colorScheme.primaryContainer,
                 onTap: () {
                   Navigator.pop(context); // Закрыть drawer
-                  context.go(_routes[index]);
+                  setState(() {
+                    _currentIndex = index;
+                  });
                 },
               );
             }),

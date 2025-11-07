@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../../booking/models/app_data.dart';
+import 'room_list_screen.dart';
+import 'booking_list_screen.dart';
+import 'profile_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -12,6 +15,10 @@ class HomeScreen extends StatelessWidget {
     final availableRooms = totalRooms - totalBookings;
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Главная'),
+        automaticallyImplyLeading: false, // Убираем кнопку назад на главном экране
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -79,7 +86,12 @@ class HomeScreen extends StatelessWidget {
               'Выберите номер для бронирования',
               Icons.hotel,
               Colors.blue,
-              () => context.goNamed('rooms'),
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const RoomListScreen(),
+                ),
+              ),
             ),
             const SizedBox(height: 12),
             _buildQuickActionCard(
@@ -88,7 +100,12 @@ class HomeScreen extends StatelessWidget {
               'Управляйте своими бронированиями',
               Icons.list_alt,
               Colors.orange,
-              () => context.goNamed('bookings'),
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const BookingListScreen(),
+                ),
+              ),
             ),
             const SizedBox(height: 12),
             _buildQuickActionCard(
@@ -97,7 +114,10 @@ class HomeScreen extends StatelessWidget {
               'Информация о вашем аккаунте',
               Icons.person,
               Colors.purple,
-              () => context.goNamed('profile'),
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfileScreen()),
+              ),
             ),
             const SizedBox(height: 12),
             _buildQuickActionCard(
@@ -106,10 +126,76 @@ class HomeScreen extends StatelessWidget {
               'Настройки приложения',
               Icons.settings,
               Colors.grey,
-              () => context.goNamed('settings'),
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildQuickActionCard(
+              context,
+              'Справка',
+              'Информация о приложении и помощь',
+              Icons.help_outline,
+              Colors.teal,
+              () => _showHelpDialog(context),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showHelpDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.help_outline, color: Colors.teal),
+            SizedBox(width: 8),
+            Text('Справка'),
+          ],
+        ),
+        content: const SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Приложение для бронирования номеров',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              SizedBox(height: 12),
+              Text('Основные возможности:'),
+              SizedBox(height: 8),
+              Text('• Просмотр доступных номеров'),
+              Text('• Бронирование номеров'),
+              Text('• Управление бронированиями'),
+              Text('• Просмотр профиля'),
+              Text('• Настройки приложения'),
+              SizedBox(height: 12),
+              Text(
+                'Навигация:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 8),
+              Text('Используйте кнопку "Назад" для возврата на предыдущий экран.'),
+              Text('Для быстрого доступа используйте карточки на главном экране.'),
+              SizedBox(height: 12),
+              Text(
+                'Версия: 1.0.0',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Закрыть'),
+          ),
+        ],
       ),
     );
   }

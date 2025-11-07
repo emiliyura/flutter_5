@@ -12,21 +12,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _darkModeEnabled = false;
   String _language = 'Русский';
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Настройки'),
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back),
+        ),
+      ),
       body: ListView(
         children: [
-          // Заголовок
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              'Настройки',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-          ),
           // Уведомления
           _buildSectionHeader('Уведомления'),
           SwitchListTile(
@@ -64,7 +62,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _showLanguageDialog(context);
             },
           ),
-          // О приложении
           _buildSectionHeader('О приложении'),
           ListTile(
             leading: const Icon(Icons.info),
