@@ -40,7 +40,13 @@ class _BookingListScreenState extends State<BookingListScreen> {
       appBar: AppBar(
         title: const Text('Мои бронирования'),
         leading: IconButton(
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/');
+            }
+          },
           icon: const Icon(Icons.arrow_back),
         ),
         actions: [

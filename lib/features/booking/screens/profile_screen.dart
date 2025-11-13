@@ -6,8 +6,6 @@ import 'package:flutter_5/shared/state/user_state.dart';
 import 'package:flutter_5/shared/state/booking_state.dart';
 import 'package:flutter_5/features/booking/models/booking.dart';
 
-/// Страница профиля пользователя - демонстрирует использование InheritedWidget
-/// с подпиской на изменения через addListener/removeListener
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -23,10 +21,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Получаем UserState через UserStateProvider.of(context)
     if (!_isInitialized) {
       _userState = UserStateProvider.of(context);
-      _userState?.addListener(_onUserStateChanged); // Подписка на изменения
+      _userState?.addListener(_onUserStateChanged);
       _nameController.text = _userState?.name ?? '';
       _isInitialized = true;
     }
@@ -34,12 +31,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   void dispose() {
-    _userState?.removeListener(_onUserStateChanged); // Отписка от изменений
+    _userState?.removeListener(_onUserStateChanged);
     _nameController.dispose();
     super.dispose();
   }
 
-  /// Обработчик изменения UserState
   void _onUserStateChanged() {
     if (mounted) {
       setState(() {
@@ -48,10 +44,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  /// Сохранение имени пользователя
   void _saveName() {
     if (_nameController.text.trim().isNotEmpty && _userState != null) {
-      _userState!.updateUser(name: _nameController.text.trim()); // Обновление состояния
+      _userState!.updateUser(name: _nameController.text.trim());
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Имя сохранено успешно!'),
@@ -74,16 +69,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     context.push('/bookings');
   }
 
+
+
   @override
   Widget build(BuildContext context) {
-    // Получаем состояние через InheritedWidget
     final state = UserStateProvider.of(context);
     final user = state;
-
-    // Получаем конфигурацию через GetIt
     final appConfig = getIt<AppConfigService>();
-
-    // Получаем состояние бронирований через InheritedWidget для статистики
     final bookingState = BookingStateProvider.of(context);
 
     return Scaffold(
@@ -98,7 +90,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Заголовок профиля с информацией о пользователе
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24.0),
@@ -142,8 +133,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(height: 24),
-
-            // Поле ввода имени с кнопкой сохранения (как в методичке)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Card(
@@ -183,8 +172,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(height: 16),
-
-            // Информация из GetIt
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Card(
@@ -210,8 +197,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(height: 16),
-
-            // Статистика (реактивно обновляется через InheritedWidget)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: ListenableBuilder(
@@ -238,8 +223,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(height: 24),
-
-            // Информация о пользователе
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Column(
@@ -301,14 +284,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(height: 32),
-
-            // Демонстрация работы InheritedWidget и GetIt
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Заголовок раздела демонстрации
                   Row(
                     children: [
                       Container(
@@ -331,21 +311,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
-
-                  // GetIt Demo
-                  _buildSectionHeader('GetIt DI Container', Icons.storage, Colors.blue),
+                  _buildSectionHeader(' ', Icons.storage, Colors.blue),
                   const SizedBox(height: 12),
                   const GetItDemoWidget(),
                   const SizedBox(height: 24),
-
-                  // InheritedWidget Demo
-                  _buildSectionHeader('InheritedWidget', Icons.account_tree, Colors.green),
+                  _buildSectionHeader(' ', Icons.account_tree, Colors.green),
                   const SizedBox(height: 12),
                   InheritedWidgetDemoWidget(userState: state),
                   const SizedBox(height: 24),
-
-                  // Combined Usage Demo
-                  _buildSectionHeader('Комбинированное использование', Icons.link, Colors.orange),
+                  _buildSectionHeader(' ', Icons.link, Colors.orange),
                   const SizedBox(height: 12),
                   CombinedUsageDemoWidget(userState: state, appConfig: appConfig, bookingState: bookingState),
                   const SizedBox(height: 24),
@@ -419,7 +393,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-/// Виджет демонстрации GetIt
 class GetItDemoWidget extends StatefulWidget {
   const GetItDemoWidget({super.key});
 
@@ -432,7 +405,6 @@ class _GetItDemoWidgetState extends State<GetItDemoWidget> {
 
   @override
   Widget build(BuildContext context) {
-    // Получаем сервисы через GetIt
     final appConfig = getIt<AppConfigService>();
     final themeService = getIt<ThemeService>();
     final settingsService = getIt<AppSettingsService>();
@@ -473,7 +445,7 @@ class _GetItDemoWidgetState extends State<GetItDemoWidget> {
                     setState(() {
                       _updateCounter++;
                     });
-                    _showSnackBar(context, 'Тема переключена через GetIt!');
+                    _showSnackBar(context, 'Тема переключена');
                   },
                   icon: const Icon(Icons.palette),
                   label: const Text('Переключить тему'),
@@ -484,7 +456,7 @@ class _GetItDemoWidgetState extends State<GetItDemoWidget> {
                     setState(() {
                       _updateCounter++;
                     });
-                    _showSnackBar(context, 'Язык изменен через GetIt!');
+                    _showSnackBar(context, 'Язык изменен');
                   },
                   icon: const Icon(Icons.language),
                   label: const Text('Изменить язык'),
@@ -495,7 +467,7 @@ class _GetItDemoWidgetState extends State<GetItDemoWidget> {
                     setState(() {
                       _updateCounter++;
                     });
-                    _showSnackBar(context, 'Уведомления изменены через GetIt!');
+                    _showSnackBar(context, 'Уведомления изменены');
                   },
                   icon: const Icon(Icons.notifications),
                   label: const Text('Уведомления'),
@@ -514,7 +486,7 @@ class _GetItDemoWidgetState extends State<GetItDemoWidget> {
                   const Icon(Icons.update, size: 16, color: Colors.blue),
                   const SizedBox(width: 8),
                   Text(
-                    'Обновлений через GetIt: $_updateCounter',
+                    'Обновлений: $_updateCounter',
                     style: const TextStyle(fontSize: 12, color: Colors.blue),
                   ),
                 ],
@@ -562,7 +534,6 @@ class _GetItDemoWidgetState extends State<GetItDemoWidget> {
   }
 }
 
-/// Виджет демонстрации InheritedWidget
 class InheritedWidgetDemoWidget extends StatefulWidget {
   final UserState userState;
 
@@ -617,7 +588,7 @@ class _InheritedWidgetDemoWidgetState extends State<InheritedWidgetDemoWidget> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Данные пользователя (InheritedWidget):',
+              'Данные пользователя:',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
@@ -636,7 +607,7 @@ class _InheritedWidgetDemoWidgetState extends State<InheritedWidgetDemoWidget> {
             const Divider(),
             const SizedBox(height: 16),
             const Text(
-              'Бронирования (InheritedWidget):',
+              'Бронирования:',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
@@ -673,7 +644,7 @@ class _InheritedWidgetDemoWidgetState extends State<InheritedWidgetDemoWidget> {
                 ElevatedButton.icon(
                   onPressed: () {
                     _userState.updateCity(_userState.city == 'Москва' ? 'Санкт-Петербург' : 'Москва');
-                    _showSnackBar(context, 'Город изменен через InheritedWidget!');
+                    _showSnackBar(context, 'Город изменен');
                   },
                   icon: const Icon(Icons.location_city),
                   label: const Text('Изменить город'),
@@ -689,7 +660,7 @@ class _InheritedWidgetDemoWidgetState extends State<InheritedWidgetDemoWidget> {
                       checkOut: DateTime.now().add(const Duration(days: 2)),
                     );
                     _bookingState.addBooking(booking);
-                    _showSnackBar(context, 'Бронирование добавлено через InheritedWidget!');
+                    _showSnackBar(context, 'Бронирование добавлено');
                   },
                   icon: const Icon(Icons.add),
                   label: const Text('Добавить бронирование'),
@@ -699,7 +670,7 @@ class _InheritedWidgetDemoWidgetState extends State<InheritedWidgetDemoWidget> {
                   ElevatedButton.icon(
                     onPressed: () {
                       _bookingState.clearAllBookings();
-                      _showSnackBar(context, 'Бронирования очищены через InheritedWidget!');
+                      _showSnackBar(context, 'Бронирования очищены');
                     },
                     icon: const Icon(Icons.clear),
                     label: const Text('Очистить'),
@@ -777,7 +748,6 @@ class _InheritedWidgetDemoWidgetState extends State<InheritedWidgetDemoWidget> {
   }
 }
 
-/// Виджет демонстрации комбинированного использования
 class CombinedUsageDemoWidget extends StatelessWidget {
   final UserState userState;
   final AppConfigService appConfig;
@@ -815,7 +785,7 @@ class CombinedUsageDemoWidget extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             const Text(
-              'Этот виджет использует данные из обоих источников одновременно:',
+              ' ',
               style: TextStyle(fontSize: 12),
             ),
             const SizedBox(height: 16),
@@ -832,19 +802,19 @@ class CombinedUsageDemoWidget extends StatelessWidget {
                   'Пользователь',
                   userState.name,
                   Icons.person,
-                  'InheritedWidget',
+                  ' ',
                 ),
                 _buildCombinedRow(
                   'Бронирований',
                   '${bookingState.totalBookings}',
                   Icons.bookmark,
-                  'InheritedWidget',
+                  ' ',
                 ),
                 _buildCombinedRow(
                   'Email',
                   userState.email,
                   Icons.email,
-                  'InheritedWidget',
+                  ' ',
                 ),
               ],
             ),
@@ -867,9 +837,9 @@ class CombinedUsageDemoWidget extends StatelessWidget {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    '• GetIt: Данные доступны глобально\n'
-                    '• InheritedWidget: Данные реактивно обновляются\n'
-                    '• Оба метода работают независимо и вместе',
+                    ' \n'
+                    ' \n'
+                    ' ',
                     style: TextStyle(fontSize: 12),
                   ),
                 ],
@@ -907,7 +877,7 @@ class CombinedUsageDemoWidget extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: source == 'GetIt' ? Colors.blue.shade100 : Colors.green.shade100,
+              color: source == ' ' ? Colors.blue.shade100 : Colors.green.shade100,
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
@@ -915,7 +885,7 @@ class CombinedUsageDemoWidget extends StatelessWidget {
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
-                color: source == 'GetIt' ? Colors.blue.shade700 : Colors.green.shade700,
+                color: source == ' ' ? Colors.blue.shade700 : Colors.green.shade700,
               ),
             ),
           ),

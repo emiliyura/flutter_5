@@ -5,7 +5,6 @@ import 'package:flutter_5/shared/state/booking_state.dart';
 import '../../booking/models/room.dart';
 import '../../booking/models/booking.dart';
 import 'booking_step_indicator.dart';
-import 'booking_list_screen.dart';
 
 /// Страница подтверждения бронирования - демонстрирует использование InheritedWidget
 /// для сохранения бронирования через BookingStateProvider

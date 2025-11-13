@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_5/core/service_locator.dart';
 import '../../booking/models/room.dart';
 import '../widgets/room_card.dart';
-import 'booking_list_screen.dart';
 
 /// Страница списка номеров - демонстрирует использование GetIt
 /// для получения списка номеров
