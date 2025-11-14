@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../providers/settings_provider.dart';
+import '../localization/settings_localizations.dart';
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
-  @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
-}
-
-class _SettingsScreenState extends State<SettingsScreen> {
-  bool _notificationsEnabled = true;
-  bool _darkModeEnabled = false;
-  String _language = 'Русский';
-
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settingsState = ref.watch(settingsProviderProvider);
+    final notificationsEnabled = settingsState.notificationsEnabled;
+    final darkModeEnabled = settingsState.darkModeEnabled;
+    final language = settingsState.language;
+    final localizations = SettingsLocalizations(language: language);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Настройки'),
+        title: Text(localizations.settingsTitle),
         leading: IconButton(
           onPressed: () => context.pop(),
           icon: const Icon(Icons.arrow_back),
@@ -26,75 +26,79 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       body: ListView(
         children: [
-          // Уведомления
-          _buildSectionHeader('Уведомления'),
+          _buildSectionHeader(context, localizations.notificationsSection),
           SwitchListTile(
-            title: const Text('Уведомления'),
-            subtitle: const Text('Получать уведомления о бронированиях'),
-            value: _notificationsEnabled,
+            title: Text(localizations.notificationsTitle),
+            subtitle: Text(localizations.notificationsSubtitle),
+            value: notificationsEnabled,
             onChanged: (value) {
-              setState(() {
-                _notificationsEnabled = value;
-              });
+              ref.read(settingsProviderProvider.notifier).setNotificationsEnabled(value);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(localizations.notificationsEnabled(value)),
+                  duration: const Duration(seconds: 1),
+                ),
+              );
             },
             secondary: const Icon(Icons.notifications),
           ),
-          // Внешний вид
-          _buildSectionHeader('Внешний вид'),
+          _buildSectionHeader(context, localizations.appearanceSection),
           SwitchListTile(
-            title: const Text('Темная тема'),
-            subtitle: const Text('Использовать темную тему приложения'),
-            value: _darkModeEnabled,
+            title: Text(localizations.darkThemeTitle),
+            subtitle: Text(localizations.darkThemeSubtitle),
+            value: darkModeEnabled,
             onChanged: (value) {
-              setState(() {
-                _darkModeEnabled = value;
-              });
+              ref.read(settingsProviderProvider.notifier).setDarkModeEnabled(value);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(localizations.darkThemeEnabled(value)),
+                  duration: const Duration(seconds: 1),
+                ),
+              );
             },
             secondary: const Icon(Icons.dark_mode),
           ),
-          // Язык
-          _buildSectionHeader('Язык'),
+          _buildSectionHeader(context, localizations.languageSection),
           ListTile(
             leading: const Icon(Icons.language),
-            title: const Text('Язык приложения'),
-            subtitle: Text(_language),
+            title: Text(localizations.languageTitle),
+            subtitle: Text(language),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
-              _showLanguageDialog(context);
+              _showLanguageDialog(context, ref, language, localizations);
             },
           ),
-          _buildSectionHeader('О приложении'),
+          _buildSectionHeader(context, localizations.aboutSection),
           ListTile(
             leading: const Icon(Icons.info),
-            title: const Text('Версия приложения'),
+            title: Text(localizations.appVersionTitle),
             subtitle: const Text('1.0.0'),
           ),
           ListTile(
             leading: const Icon(Icons.description),
-            title: const Text('Условия использования'),
+            title: Text(localizations.termsOfUse),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
-              _showInfoDialog(context, 'Условия использования', 'Здесь будут условия использования приложения.');
+              _showInfoDialog(context, localizations.termsOfUse, localizations.termsOfUseContent, localizations);
             },
           ),
           ListTile(
             leading: const Icon(Icons.privacy_tip),
-            title: const Text('Политика конфиденциальности'),
+            title: Text(localizations.privacyPolicy),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
-              _showInfoDialog(context, 'Политика конфиденциальности', 'Здесь будет политика конфиденциальности.');
+              _showInfoDialog(context, localizations.privacyPolicy, localizations.privacyPolicyContent, localizations);
             },
           ),
           const SizedBox(height: 24),
-          // Кнопка выхода
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: OutlinedButton.icon(
               onPressed: () {
-                _showLogoutDialog(context);
+                _showLogoutDialog(context, localizations);
               },
               icon: const Icon(Icons.logout),
-              label: const Text('Выйти из аккаунта'),
+              label: Text(localizations.logout),
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.red,
                 side: const BorderSide(color: Colors.red),
@@ -106,7 +110,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
       child: Text(
@@ -119,34 +123,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showLanguageDialog(BuildContext context) {
+  void _showLanguageDialog(BuildContext context, WidgetRef ref, String currentLanguage, SettingsLocalizations localizations) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Выберите язык'),
+        title: Text(localizations.selectLanguage),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             RadioListTile<String>(
-              title: const Text('Русский'),
+              title: Text(localizations.russian),
               value: 'Русский',
-              groupValue: _language,
+              groupValue: currentLanguage,
               onChanged: (value) {
-                setState(() {
-                  _language = value!;
-                });
+                if (value != null) {
+                  ref.read(settingsProviderProvider.notifier).setLanguage(value);
+                }
                 Navigator.pop(context);
+                final newLocalizations = SettingsLocalizations(language: value!);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(newLocalizations.languageChanged(newLocalizations.russian)),
+                    duration: const Duration(seconds: 1),
+                  ),
+                );
               },
             ),
             RadioListTile<String>(
-              title: const Text('English'),
+              title: Text(localizations.english),
               value: 'English',
-              groupValue: _language,
+              groupValue: currentLanguage,
               onChanged: (value) {
-                setState(() {
-                  _language = value!;
-                });
+                if (value != null) {
+                  ref.read(settingsProviderProvider.notifier).setLanguage(value);
+                }
                 Navigator.pop(context);
+                final newLocalizations = SettingsLocalizations(language: value!);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(newLocalizations.languageChanged(newLocalizations.english)),
+                    duration: const Duration(seconds: 1),
+                  ),
+                );
               },
             ),
           ],
@@ -155,7 +173,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showInfoDialog(BuildContext context, String title, String content) {
+  void _showInfoDialog(BuildContext context, String title, String content, SettingsLocalizations localizations) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -164,36 +182,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Закрыть'),
+            child: Text(localizations.close),
           ),
         ],
       ),
     );
   }
 
-  void _showLogoutDialog(BuildContext context) {
+  void _showLogoutDialog(BuildContext context, SettingsLocalizations localizations) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Выход из аккаунта'),
-        content: const Text('Вы уверены, что хотите выйти из аккаунта?'),
+        title: Text(localizations.logoutTitle),
+        content: Text(localizations.logoutMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Отмена'),
+            child: Text(localizations.cancel),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Вы вышли из аккаунта')),
+                SnackBar(content: Text(localizations.loggedOut)),
               );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Выйти'),
+            child: Text(localizations.confirm),
           ),
         ],
       ),

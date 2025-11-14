@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:local_utils/local_utils.dart';
-import 'package:flutter_5/shared/state/booking_state.dart';
 import '../../booking/models/room.dart';
-import '../../booking/models/booking.dart';
 import 'booking_step_indicator.dart';
+import '../providers/booking_state_provider.dart';
+import '../providers/booking_dates_provider.dart';
 
-/// Страница подтверждения бронирования - демонстрирует использование InheritedWidget
-/// для сохранения бронирования через BookingStateProvider
-class BookingStep3Screen extends StatelessWidget {
+class BookingStep3Screen extends ConsumerStatefulWidget {
   final Room room;
   final String guestName;
   final DateTime checkIn;
@@ -22,37 +21,67 @@ class BookingStep3Screen extends StatelessWidget {
     required this.checkOut,
   });
 
-  void _goToStep2(BuildContext context) {
-    final path = '/booking/step2/${room.id}';
-    final checkInStr = Uri.encodeComponent(checkIn.toIso8601String());
-    final checkOutStr = Uri.encodeComponent(checkOut.toIso8601String());
-    final guestNameStr = Uri.encodeComponent(guestName);
+  @override
+  ConsumerState<BookingStep3Screen> createState() => _BookingStep3ScreenState();
+}
+
+class _BookingStep3ScreenState extends ConsumerState<BookingStep3Screen> {
+  bool _datesSet = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_datesSet) {
+        ref.read(bookingDatesProviderProvider.notifier).setCheckIn(widget.checkIn);
+        ref.read(bookingDatesProviderProvider.notifier).setCheckOut(widget.checkOut);
+        _datesSet = true;
+      }
+    });
+  }
+
+  void _goToStep2() {
+    final path = '/booking/step2/${widget.room.id}';
+    final checkInStr = Uri.encodeComponent(widget.checkIn.toIso8601String());
+    final checkOutStr = Uri.encodeComponent(widget.checkOut.toIso8601String());
+    final guestNameStr = Uri.encodeComponent(widget.guestName);
     context.go('$path?checkIn=$checkInStr&checkOut=$checkOutStr&guestName=$guestNameStr');
   }
 
-  void _saveBooking(BuildContext context) {
-    // Получаем состояние через InheritedWidget и сохраняем бронирование
-    final bookingState = BookingStateProvider.of(context);
-    final booking = Booking(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      roomId: room.id,
-      guestName: guestName,
-      checkIn: checkIn,
-      checkOut: checkOut,
-    );
-    bookingState.addBooking(booking);
-    context.go('/bookings');
+  Future<void> _saveBooking() async {
+    await ref.read(bookingStateProviderProvider.notifier).createBooking(
+          room: widget.room,
+          guestName: widget.guestName,
+          checkIn: widget.checkIn,
+          checkOut: widget.checkOut,
+        );
+
+    final bookingState = ref.read(bookingStateProviderProvider);
+    if (bookingState.process.state == BookingProcessState.success) {
+      await ref.read(bookingStateProviderProvider.notifier).refreshBookingsCache();
+      
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      if (mounted) {
+        context.go('/bookings');
+      }
+    } else if (bookingState.process.state == BookingProcessState.error) {
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final nights = checkOut.difference(checkIn).inDays;
-    final totalPrice = room.price * nights;
+    final bookingState = ref.watch(bookingStateProviderProvider);
+    final bookingProcess = bookingState.process;
+    final nights = widget.checkOut.difference(widget.checkIn).inDays;
+    final totalPrice = widget.room.price * nights;
 
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          onPressed: () => _goToStep2(context),
+          onPressed: bookingProcess.state == BookingProcessState.loading
+              ? null
+              : () => _goToStep2(),
           icon: const Icon(Icons.arrow_back),
         ),
         title: const Text('Бронирование - Шаг 3'),
@@ -63,7 +92,7 @@ class BookingStep3Screen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Номер: ${room.title}', style: Theme.of(context).textTheme.titleLarge),
+              Text('Номер: ${widget.room.title}', style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 24),
               const BookingStepIndicator(currentStep: 3),
               const SizedBox(height: 32),
@@ -83,13 +112,13 @@ class BookingStep3Screen extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Номер: ${room.title}', style: Theme.of(context).textTheme.titleMedium),
+                              Text('Номер: ${widget.room.title}', style: Theme.of(context).textTheme.titleMedium),
                               const SizedBox(height: 8),
-                              Text('Гость: $guestName'),
+                              Text('Гость: ${widget.guestName}'),
                               const SizedBox(height: 8),
-                              Text('Заезд: ${DateHelpers.formatDate(checkIn)}'),
+                              Text('Заезд: ${DateHelpers.formatDate(widget.checkIn)}'),
                               const SizedBox(height: 8),
-                              Text('Выезд: ${DateHelpers.formatDate(checkOut)}'),
+                              Text('Выезд: ${DateHelpers.formatDate(widget.checkOut)}'),
                               const SizedBox(height: 8),
                               Text('Количество ночей: $nights'),
                               const Divider(),
@@ -104,19 +133,134 @@ class BookingStep3Screen extends StatelessWidget {
                           ),
                         ),
                       ),
+                      if (bookingProcess.state == BookingProcessState.loading) ...[
+                        const SizedBox(height: 20),
+                        Card(
+                          color: Colors.blue.shade50,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Row(
+                              children: [
+                                const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Text(
+                                    'Обработка бронирования...',
+                                    style: TextStyle(
+                                      color: Colors.blue[900],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                      if (bookingProcess.state == BookingProcessState.error) ...[
+                        const SizedBox(height: 20),
+                        Card(
+                          color: Colors.red.shade50,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(Icons.error_outline, color: Colors.red[700]),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'Ошибка при создании бронирования',
+                                        style: TextStyle(
+                                          color: Colors.red[700],
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (bookingProcess.errorMessage != null) ...[
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    bookingProcess.errorMessage!,
+                                    style: TextStyle(color: Colors.red[700], fontSize: 12),
+                                  ),
+                                ],
+                                const SizedBox(height: 12),
+                                ElevatedButton.icon(
+                                  onPressed: () {
+                                    ref.read(bookingStateProviderProvider.notifier).resetProcess();
+                                    _saveBooking();
+                                  },
+                                  icon: const Icon(Icons.refresh),
+                                  label: const Text('Повторить'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                      if (bookingProcess.state == BookingProcessState.success) ...[
+                        const SizedBox(height: 20),
+                        Card(
+                          color: Colors.green.shade50,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Row(
+                              children: [
+                                Icon(Icons.check_circle, color: Colors.green[700]),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Text(
+                                    'Бронирование успешно создано!',
+                                    style: TextStyle(
+                                      color: Colors.green[700],
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 20),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           TextButton(
-                            onPressed: () => _goToStep2(context),
+                            onPressed: bookingProcess.state == BookingProcessState.loading
+                                ? null
+                                : () => _goToStep2(),
                             child: const Text('Отмена'),
                           ),
                           const SizedBox(width: 12),
                           ElevatedButton.icon(
-                            onPressed: () => _saveBooking(context),
-                            icon: const Icon(Icons.check),
-                            label: const Text('Подтвердить бронирование'),
+                            onPressed: bookingProcess.state == BookingProcessState.loading
+                                ? null
+                                : () => _saveBooking(),
+                            icon: bookingProcess.state == BookingProcessState.loading
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  )
+                                : const Icon(Icons.check),
+                            label: Text(
+                              bookingProcess.state == BookingProcessState.loading
+                                  ? 'Обработка...'
+                                  : 'Подтвердить бронирование',
+                            ),
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                             ),

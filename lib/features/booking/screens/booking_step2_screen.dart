@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:local_utils/local_utils.dart';
 import '../../booking/models/room.dart';
 import 'booking_step_indicator.dart';
+import '../providers/booking_dates_provider.dart';
 
-class BookingStep2Screen extends StatefulWidget {
+class BookingStep2Screen extends ConsumerStatefulWidget {
   final Room room;
   final String? initialGuestName;
   final DateTime initialCheckIn;
@@ -19,17 +21,25 @@ class BookingStep2Screen extends StatefulWidget {
   });
 
   @override
-  State<BookingStep2Screen> createState() => _BookingStep2ScreenState();
+  ConsumerState<BookingStep2Screen> createState() => _BookingStep2ScreenState();
 }
 
-class _BookingStep2ScreenState extends State<BookingStep2Screen> {
+class _BookingStep2ScreenState extends ConsumerState<BookingStep2Screen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameCtrl;
+  bool _datesSet = false;
 
   @override
   void initState() {
     super.initState();
     _nameCtrl = TextEditingController(text: widget.initialGuestName ?? '');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_datesSet) {
+        ref.read(bookingDatesProviderProvider.notifier).setCheckIn(widget.initialCheckIn);
+        ref.read(bookingDatesProviderProvider.notifier).setCheckOut(widget.initialCheckOut);
+        _datesSet = true;
+      }
+    });
   }
 
   void _goToStep1() {
@@ -44,9 +54,20 @@ class _BookingStep2ScreenState extends State<BookingStep2Screen> {
 
   void _handleNext() {
     if (!_formKey.currentState!.validate()) return;
+    
+    final checkIn = widget.initialCheckIn;
+    final checkOut = widget.initialCheckOut;
+    
+    if (!checkOut.isAfter(checkIn)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Дата выезда должна быть позже даты заезда')),
+      );
+      return;
+    }
+    
     final path = '/booking/step3/${widget.room.id}';
-    final checkInStr = widget.initialCheckIn.toIso8601String();
-    final checkOutStr = widget.initialCheckOut.toIso8601String();
+    final checkInStr = checkIn.toIso8601String();
+    final checkOutStr = checkOut.toIso8601String();
     final guestNameStr = Uri.encodeComponent(_nameCtrl.text.trim());
     context.go('$path?checkIn=${Uri.encodeComponent(checkInStr)}&checkOut=${Uri.encodeComponent(checkOutStr)}&guestName=$guestNameStr');
   }

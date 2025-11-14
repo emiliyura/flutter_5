@@ -1,43 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_5/core/service_locator.dart';
 import '../../booking/models/room.dart';
 import '../widgets/room_card.dart';
+import '../providers/rooms_provider.dart';
 
-/// Страница списка номеров - демонстрирует использование GetIt
-/// для получения списка номеров
-class RoomListScreen extends StatefulWidget {
+class RoomListScreen extends ConsumerWidget {
   const RoomListScreen({super.key});
-
-  @override
-  State<RoomListScreen> createState() => _RoomListScreenState();
-}
-
-class _RoomListScreenState extends State<RoomListScreen> {
-  bool _priceAsc = true;
-
-  void _toggleSort() {
-    setState(() {
-      _priceAsc = !_priceAsc;
-    });
-  }
-
-  void _onBook(Room room) {
+  void _onBook(BuildContext context, Room room) {
     context.go('/booking/step1/${room.id}');
   }
-
-  void _onOpenBookings() {
+  void _onOpenBookings(BuildContext context) {
     context.push('/bookings');
   }
-
-
+  void _toggleSort(WidgetRef ref) {
+    ref.read(roomsProviderProvider.notifier).toggleSort();
+  }
   @override
-  Widget build(BuildContext context) {
-    // Получаем список номеров через GetIt
-    final allRooms = getIt<List<Room>>();
-    final rooms = List<Room>.from(allRooms);
-    rooms.sort((a, b) => _priceAsc ? a.price.compareTo(b.price) : b.price.compareTo(a.price));
-
+  Widget build(BuildContext context, WidgetRef ref) {
+    final roomsState = ref.watch(roomsProviderProvider);
+    final roomsAsync = roomsState.rooms.whenData((roomList) {
+      final sorted = List<Room>.from(roomList);
+      sorted.sort((a, b) => roomsState.sortAscending
+          ? a.price.compareTo(b.price)
+          : b.price.compareTo(a.price));
+      return sorted;
+    });
+    final isRefreshing = roomsState.isRefreshing;
+    final sortAscending = roomsState.sortAscending;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Номера'),
@@ -47,23 +37,84 @@ class _RoomListScreenState extends State<RoomListScreen> {
         ),
         actions: [
           IconButton(
-            tooltip: _priceAsc ? 'Цена: по возрастанию' : 'Цена: по убыванию',
-            onPressed: _toggleSort,
-            icon: Icon(_priceAsc ? Icons.arrow_upward : Icons.arrow_downward),
+            tooltip: sortAscending ? 'Цена: по возрастанию' : 'Цена: по убыванию',
+            onPressed: () => _toggleSort(ref),
+            icon: Icon(sortAscending ? Icons.arrow_upward : Icons.arrow_downward),
           ),
           IconButton(
             tooltip: 'Мои бронирования',
-            onPressed: _onOpenBookings,
+            onPressed: () => _onOpenBookings(context),
             icon: const Icon(Icons.list),
           ),
         ],
       ),
-      body: ListView.builder(
-        itemCount: rooms.length,
-        itemBuilder: (context, index) {
-          final r = rooms[index];
-          return RoomCard(room: r, onBook: _onBook);
-        },
+      body: roomsAsync.when(
+        data: (rooms) => RefreshIndicator(
+          onRefresh: () async {
+            await ref.read(roomsProviderProvider.notifier).refresh();
+          },
+          child: isRefreshing
+              ? const Center(child: CircularProgressIndicator())
+              : rooms.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.hotel_outlined,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Номера не найдены',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: rooms.length,
+                      itemBuilder: (context, index) {
+                        final r = rooms[index];
+                        return RoomCard(room: r, onBook: (room) => _onBook(context, room));
+                      },
+                    ),
+        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+              const SizedBox(height: 16),
+              Text(
+                'Ошибка загрузки номеров',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.red[700],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                error.toString(),
+                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () {
+                  ref.invalidate(roomsProviderProvider);
+                },
+                icon: const Icon(Icons.refresh),
+                label: const Text('Повторить'),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

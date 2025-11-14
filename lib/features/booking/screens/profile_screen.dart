@@ -1,52 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_5/core/service_locator.dart';
 import 'package:flutter_5/shared/services/app_config_service.dart';
 import 'package:flutter_5/shared/state/user_state.dart';
-import 'package:flutter_5/shared/state/booking_state.dart';
 import 'package:flutter_5/features/booking/models/booking.dart';
+import '../providers/user_provider.dart';
+import '../providers/booking_state_provider.dart';
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
-  UserState? _userState;
-  final TextEditingController _nameController = TextEditingController();
-  bool _isInitialized = false;
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  late final TextEditingController _nameController;
+  String? _lastUserName;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_isInitialized) {
-      _userState = UserStateProvider.of(context);
-      _userState?.addListener(_onUserStateChanged);
-      _nameController.text = _userState?.name ?? '';
-      _isInitialized = true;
-    }
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController();
   }
 
   @override
   void dispose() {
-    _userState?.removeListener(_onUserStateChanged);
     _nameController.dispose();
     super.dispose();
   }
 
-  void _onUserStateChanged() {
-    if (mounted) {
-      setState(() {
-        _nameController.text = _userState?.name ?? '';
-      });
-    }
-  }
-
   void _saveName() {
-    if (_nameController.text.trim().isNotEmpty && _userState != null) {
-      _userState!.updateUser(name: _nameController.text.trim());
+    final name = _nameController.text.trim();
+    if (name.isNotEmpty) {
+      ref.read(userProviderProvider.notifier).updateUserName(name);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Имя сохранено успешно!'),
@@ -73,10 +61,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final state = UserStateProvider.of(context);
-    final user = state;
+    final userSnapshot = ref.watch(userProviderProvider);
+    final userName = userSnapshot.name;
+    final userEmail = userSnapshot.email;
+    final userPhone = userSnapshot.phone;
+    final userCity = userSnapshot.city;
+    final bookingState = ref.watch(bookingStateProviderProvider);
+    final stats = bookingState.getBookingsStats();
     final appConfig = getIt<AppConfigService>();
-    final bookingState = BookingStateProvider.of(context);
+    
+    if (_lastUserName != userName) {
+      _lastUserName = userName;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _nameController.text != userName) {
+          _nameController.text = userName;
+        }
+      });
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -116,7 +117,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    user.name,
+                    userName,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -124,7 +125,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    user.email,
+                    userEmail,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.white70,
                         ),
@@ -199,27 +200,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: ListenableBuilder(
-                listenable: bookingState,
-                builder: (context, child) {
-                  return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _buildStatItem(context, 'Бронирований', '${bookingState.totalBookings}'),
-                          Container(
-                            width: 1,
-                            height: 40,
-                            color: Colors.grey[300],
-                          ),
-                          _buildStatItem(context, 'Статус', 'Активен'),
-                        ],
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildStatItem(context, 'Бронирований', '${stats.total}'),
+                      Container(
+                        width: 1,
+                        height: 40,
+                        color: Colors.grey[300],
                       ),
-                    ),
-                  );
-                },
+                      _buildStatItem(context, 'Статус', 'Активен'),
+                    ],
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -239,19 +235,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     context,
                     Icons.phone,
                     'Телефон',
-                    user.phone,
+                    userPhone,
                   ),
-                  _buildInfoTile(
-                    context,
-                    Icons.calendar_today,
-                    'Дата регистрации',
-                    '${user.registrationDate.day}.${user.registrationDate.month}.${user.registrationDate.year}',
-                  ),
+                              _buildInfoTile(
+                                context,
+                                Icons.calendar_today,
+                                'Дата регистрации',
+                                '${userSnapshot.registrationDate.day}.${userSnapshot.registrationDate.month}.${userSnapshot.registrationDate.year}',
+                              ),
                   _buildInfoTile(
                     context,
                     Icons.location_on,
                     'Город',
-                    user.city,
+                    userCity,
                   ),
                   const SizedBox(height: 16),
                   Card(
@@ -317,11 +313,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 24),
                   _buildSectionHeader(' ', Icons.account_tree, Colors.green),
                   const SizedBox(height: 12),
-                  InheritedWidgetDemoWidget(userState: state),
+                  InheritedWidgetDemoWidget(userState: getIt<UserState>()),
                   const SizedBox(height: 24),
                   _buildSectionHeader(' ', Icons.link, Colors.orange),
                   const SizedBox(height: 12),
-                  CombinedUsageDemoWidget(userState: state, appConfig: appConfig, bookingState: bookingState),
+                              CombinedUsageDemoWidget(userSnapshot: userSnapshot, appConfig: appConfig, stats: stats),
                   const SizedBox(height: 24),
                 ],
               ),
@@ -534,7 +530,7 @@ class _GetItDemoWidgetState extends State<GetItDemoWidget> {
   }
 }
 
-class InheritedWidgetDemoWidget extends StatefulWidget {
+class InheritedWidgetDemoWidget extends ConsumerStatefulWidget {
   final UserState userState;
 
   const InheritedWidgetDemoWidget({
@@ -543,26 +539,22 @@ class InheritedWidgetDemoWidget extends StatefulWidget {
   });
 
   @override
-  State<InheritedWidgetDemoWidget> createState() => _InheritedWidgetDemoWidgetState();
+  ConsumerState<InheritedWidgetDemoWidget> createState() => _InheritedWidgetDemoWidgetState();
 }
 
-class _InheritedWidgetDemoWidgetState extends State<InheritedWidgetDemoWidget> {
+class _InheritedWidgetDemoWidgetState extends ConsumerState<InheritedWidgetDemoWidget> {
   late UserState _userState;
-  late BookingState _bookingState;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _userState = widget.userState;
-    _bookingState = BookingStateProvider.of(context);
     _userState.addListener(_onUserStateChanged);
-    _bookingState.addListener(_onBookingStateChanged);
   }
 
   @override
   void dispose() {
     _userState.removeListener(_onUserStateChanged);
-    _bookingState.removeListener(_onBookingStateChanged);
     super.dispose();
   }
 
@@ -572,14 +564,11 @@ class _InheritedWidgetDemoWidgetState extends State<InheritedWidgetDemoWidget> {
     }
   }
 
-  void _onBookingStateChanged() {
-    if (mounted) {
-      setState(() {});
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final bookingState = ref.watch(bookingStateProviderProvider);
+    final bookings = bookingState.bookings;
+    
     return Card(
       elevation: 2,
       child: Padding(
@@ -616,12 +605,12 @@ class _InheritedWidgetDemoWidgetState extends State<InheritedWidgetDemoWidget> {
             const SizedBox(height: 12),
             Column(
               children: [
-                _buildInfoRow('Всего бронирований', '${_bookingState.totalBookings}', Icons.bookmark),
-                if (_bookingState.bookings.isNotEmpty) ...[
+                _buildInfoRow('Всего бронирований', '${bookings.length}', Icons.bookmark),
+                if (bookings.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   const Text('Список бронирований:', style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  ..._bookingState.bookings.map((booking) => Padding(
+                  ...bookings.map((booking) => Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4.0),
                     child: Text(
                       '• Бронирование ${booking.id.substring(0, 8)}...',
@@ -659,17 +648,17 @@ class _InheritedWidgetDemoWidgetState extends State<InheritedWidgetDemoWidget> {
                       checkIn: DateTime.now(),
                       checkOut: DateTime.now().add(const Duration(days: 2)),
                     );
-                    _bookingState.addBooking(booking);
+                    ref.read(bookingStateProviderProvider.notifier).addBooking(booking);
                     _showSnackBar(context, 'Бронирование добавлено');
                   },
                   icon: const Icon(Icons.add),
                   label: const Text('Добавить бронирование'),
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                 ),
-                if (_bookingState.bookings.isNotEmpty)
+                if (bookings.isNotEmpty)
                   ElevatedButton.icon(
                     onPressed: () {
-                      _bookingState.clearAllBookings();
+                      ref.read(bookingStateProviderProvider.notifier).clearAllBookings();
                       _showSnackBar(context, 'Бронирования очищены');
                     },
                     icon: const Icon(Icons.clear),
@@ -749,15 +738,15 @@ class _InheritedWidgetDemoWidgetState extends State<InheritedWidgetDemoWidget> {
 }
 
 class CombinedUsageDemoWidget extends StatelessWidget {
-  final UserState userState;
+  final UserStateSnapshot userSnapshot;
   final AppConfigService appConfig;
-  final BookingState bookingState;
+  final BookingsStats stats;
 
   const CombinedUsageDemoWidget({
     super.key,
-    required this.userState,
+    required this.userSnapshot,
     required this.appConfig,
-    required this.bookingState,
+    required this.stats,
   });
 
   @override
@@ -800,19 +789,19 @@ class CombinedUsageDemoWidget extends StatelessWidget {
                 ),
                 _buildCombinedRow(
                   'Пользователь',
-                  userState.name,
+                  userSnapshot.name,
                   Icons.person,
                   ' ',
                 ),
                 _buildCombinedRow(
                   'Бронирований',
-                  '${bookingState.totalBookings}',
+                  '${stats.total}',
                   Icons.bookmark,
                   ' ',
                 ),
                 _buildCombinedRow(
                   'Email',
-                  userState.email,
+                  userSnapshot.email,
                   Icons.email,
                   ' ',
                 ),

@@ -1,32 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_5/core/service_locator.dart';
 import 'package:flutter_5/shared/services/app_config_service.dart';
-import 'package:flutter_5/shared/state/booking_state.dart';
-import '../../booking/models/room.dart';
+import '../providers/rooms_provider.dart';
+import '../providers/booking_state_provider.dart';
 
-/// Главная страница - демонстрирует использование GetIt и InheritedWidget
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Получаем конфигурацию через GetIt DI контейнер
+  Widget build(BuildContext context, WidgetRef ref) {
     final appConfig = getIt<AppConfigService>();
     
-    // Получаем состояние через InheritedWidget
-    final bookingState = BookingStateProvider.of(context);
-    final totalBookings = bookingState.totalBookings;
-    
-    // Получаем список номеров через GetIt
-    final rooms = getIt<List<Room>>();
-    final totalRooms = rooms.length;
-    final availableRooms = totalRooms - totalBookings;
+    final roomsState = ref.watch(roomsProviderProvider);
+    final roomsAsync = roomsState.rooms;
+    final bookingState = ref.watch(bookingStateProviderProvider);
+    final stats = bookingState.getBookingsStats();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Главная'),
-        automaticallyImplyLeading: false, // Убираем кнопку назад на главном экране
+        automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -47,42 +42,66 @@ class HomeScreen extends StatelessWidget {
                   ),
             ),
             const SizedBox(height: 24),
-            // Статистика
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    context,
-                    'Всего номеров',
-                    totalRooms.toString(),
-                    Icons.hotel,
-                    Colors.blue,
+            roomsAsync.when(
+              data: (rooms) => Row(
+                children: [
+                  Expanded(
+                    child: _buildStatCard(
+                      context,
+                      'Всего номеров',
+                      rooms.length.toString(),
+                      Icons.hotel,
+                      Colors.blue,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildStatCard(
+                      context,
+                      'Доступно',
+                      (rooms.length - stats.total).toString(),
+                      Icons.check_circle,
+                      Colors.green,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildStatCard(
+                      context,
+                      'Бронирований',
+                      stats.total.toString(),
+                      Icons.bookmark,
+                      Colors.orange,
+                    ),
+                  ),
+                ],
+              ),
+              loading: () => const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24.0),
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+              error: (error, stack) => Card(
+                color: Colors.red.shade50,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.red),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Ошибка загрузки: ${error.toString()}',
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildStatCard(
-                    context,
-                    'Доступно',
-                    availableRooms.toString(),
-                    Icons.check_circle,
-                    Colors.green,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildStatCard(
-                    context,
-                    'Бронирований',
-                    totalBookings.toString(),
-                    Icons.bookmark,
-                    Colors.orange,
-                  ),
-                ),
-              ],
+              ),
             ),
             const SizedBox(height: 32),
-            // Информация из GetIt
             Card(
               color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
               child: Padding(
@@ -163,7 +182,6 @@ class HomeScreen extends StatelessWidget {
   }
 
   void _showHelpDialog(BuildContext context) {
-    // Получаем конфигурацию через GetIt
     final appConfig = getIt<AppConfigService>();
     
     showDialog(
