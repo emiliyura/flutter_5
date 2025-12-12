@@ -29,16 +29,7 @@ class BookingListScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Мои бронирования'),
-        leading: IconButton(
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/');
-            }
-          },
-          icon: const Icon(Icons.arrow_back),
-        ),
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             tooltip: 'Обновить',

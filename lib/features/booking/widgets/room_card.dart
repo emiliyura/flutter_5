@@ -1,20 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../booking/models/room.dart';
+import '../providers/favorites_provider.dart';
 
-class RoomCard extends StatelessWidget {
+class RoomCard extends ConsumerWidget {
   final Room room;
   final ValueChanged<Room> onBook;
 
   const RoomCard({Key? key, required this.room, required this.onBook}) : super(key: key);
 
+  void _navigateToDetail(BuildContext context) {
+    context.push('/room/${room.id}');
+  }
+
+  void _toggleFavorite(WidgetRef ref) {
+    ref.read(favoritesProviderProvider.notifier).toggleFavorite(room.id);
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isFavorite = ref.watch(favoritesProviderProvider).contains(room.id);
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Row(
+      child: InkWell(
+        onTap: () => _navigateToDetail(context),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Row(
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
@@ -58,6 +73,14 @@ class RoomCard extends StatelessWidget {
             ),
             Column(
               children: [
+                IconButton(
+                  icon: Icon(
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: isFavorite ? Colors.red : Colors.grey,
+                  ),
+                  onPressed: () => _toggleFavorite(ref),
+                  tooltip: isFavorite ? 'Удалить из избранного' : 'Добавить в избранное',
+                ),
                 room.isBooked
                     ? Chip(label: const Text('Забронирован'), backgroundColor: Colors.red.shade100)
                     : ElevatedButton(onPressed: () => onBook(room), child: const Text('Забронировать')),
@@ -65,6 +88,7 @@ class RoomCard extends StatelessWidget {
               ],
             )
           ],
+        ),
         ),
       ),
     );

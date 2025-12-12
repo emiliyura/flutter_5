@@ -24,6 +24,7 @@ class BookingApp extends ConsumerWidget {
     final appConfig = getIt<AppConfigService>();
     final bookingState = getIt<BookingState>();
     final userState = getIt<UserState>();
+    final router = ref.watch(appRouterProvider);
 
     // Сохраняем совместимость со старым кодом через InheritedWidget
     return BookingStateProvider(
@@ -34,7 +35,7 @@ class BookingApp extends ConsumerWidget {
           debugShowCheckedModeBanner: false,
           title: appConfig.fullAppName,
           theme: ThemeData(useMaterial3: true),
-          routerConfig: appRouter,
+          routerConfig: router,
         ),
       ),
     );

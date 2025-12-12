@@ -7,6 +7,7 @@ import 'package:flutter_5/shared/state/user_state.dart';
 import 'package:flutter_5/features/booking/models/booking.dart';
 import '../providers/user_provider.dart';
 import '../providers/booking_state_provider.dart';
+import '../providers/loyalty_provider.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -16,33 +17,20 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  late final TextEditingController _nameController;
-  String? _lastUserName;
-
-  @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController();
+  void _navigateToEditProfile() {
+    context.push('/profile/edit');
   }
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    super.dispose();
+  void _navigateToFavorites() {
+    context.push('/favorites');
   }
 
-  void _saveName() {
-    final name = _nameController.text.trim();
-    if (name.isNotEmpty) {
-      ref.read(userProviderProvider.notifier).updateUserName(name);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Имя сохранено успешно!'),
-          duration: Duration(seconds: 2),
-          backgroundColor: Colors.green,
-        ),
-      );
-    }
+  void _navigateToLoyalty() {
+    context.push('/loyalty');
+  }
+
+  void _navigateToBookingHistory() {
+    context.push('/bookings');
   }
 
   void _navigateToSettings() {
@@ -68,25 +56,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final userCity = userSnapshot.city;
     final bookingState = ref.watch(bookingStateProviderProvider);
     final stats = bookingState.getBookingsStats();
+    final loyaltyState = ref.watch(loyaltyProviderProvider);
     final appConfig = getIt<AppConfigService>();
-    
-    if (_lastUserName != userName) {
-      _lastUserName = userName;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _nameController.text != userName) {
-          _nameController.text = userName;
-        }
-      });
-    }
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Профиль'),
         centerTitle: true,
-        leading: IconButton(
-          onPressed: () => context.pop(),
-          icon: const Icon(Icons.arrow_back),
-        ),
+        automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -137,45 +114,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const Text(
-                        'Имя',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: _nameController,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          hintText: 'Введите имя',
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: _saveName,
-                        icon: const Icon(Icons.save),
-                        label: const Text('Сохранить'),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Card(
                 color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
                 child: Padding(
                   padding: const EdgeInsets.all(12.0),
@@ -212,6 +150,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         height: 40,
                         color: Colors.grey[300],
                       ),
+                      _buildStatItem(context, 'Баллов', '${loyaltyState.currentPoints}'),
+                      Container(
+                        width: 1,
+                        height: 40,
+                        color: Colors.grey[300],
+                      ),
                       _buildStatItem(context, 'Статус', 'Активен'),
                     ],
                   ),
@@ -241,7 +185,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 context,
                                 Icons.calendar_today,
                                 'Дата регистрации',
-                                '${userSnapshot.registrationDate.day}.${userSnapshot.registrationDate.month}.${userSnapshot.registrationDate.year}',
+                                userSnapshot.registrationDate != null
+                                    ? '${userSnapshot.registrationDate!.day}.${userSnapshot.registrationDate!.month}.${userSnapshot.registrationDate!.year}'
+                                    : 'Не указана',
                               ),
                   _buildInfoTile(
                     context,
@@ -253,6 +199,34 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   Card(
                     child: Column(
                       children: [
+                        ListTile(
+                          leading: const Icon(Icons.edit),
+                          title: const Text('Редактировать профиль'),
+                          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                          onTap: _navigateToEditProfile,
+                        ),
+                        const Divider(height: 1),
+                        ListTile(
+                          leading: const Icon(Icons.favorite),
+                          title: const Text('Избранное'),
+                          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                          onTap: _navigateToFavorites,
+                        ),
+                        const Divider(height: 1),
+                        ListTile(
+                          leading: const Icon(Icons.history),
+                          title: const Text('История бронирований'),
+                          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                          onTap: _navigateToBookingHistory,
+                        ),
+                        const Divider(height: 1),
+                        ListTile(
+                          leading: const Icon(Icons.stars),
+                          title: const Text('Программа лояльности'),
+                          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                          onTap: _navigateToLoyalty,
+                        ),
+                        const Divider(height: 1),
                         ListTile(
                           leading: const Icon(Icons.settings),
                           title: const Text('Настройки'),

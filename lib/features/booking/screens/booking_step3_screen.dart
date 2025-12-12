@@ -6,6 +6,7 @@ import '../../booking/models/room.dart';
 import 'booking_step_indicator.dart';
 import '../providers/booking_state_provider.dart';
 import '../providers/booking_dates_provider.dart';
+import '../providers/loyalty_provider.dart';
 
 class BookingStep3Screen extends ConsumerStatefulWidget {
   final Room room;
@@ -59,6 +60,19 @@ class _BookingStep3ScreenState extends ConsumerState<BookingStep3Screen> {
     final bookingState = ref.read(bookingStateProviderProvider);
     if (bookingState.process.state == BookingProcessState.success) {
       await ref.read(bookingStateProviderProvider.notifier).refreshBookingsCache();
+      
+      // Начисление баллов за бронирование (1% от стоимости)
+      final nights = widget.checkOut.difference(widget.checkIn).inDays;
+      final totalPrice = widget.room.price * nights;
+      final points = (totalPrice * 0.01).round(); // 1 балл = 1% от стоимости
+      
+      if (points > 0 && bookingState.process.booking != null) {
+        ref.read(loyaltyProviderProvider.notifier).earnPoints(
+              points,
+              'Бронирование номера "${widget.room.title}"',
+              bookingId: bookingState.process.booking!.id,
+            );
+      }
       
       await Future.delayed(const Duration(milliseconds: 500));
       
