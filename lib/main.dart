@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_5/app/app_router.dart';
-import 'package:flutter_5/core/service_locator.dart';
+import 'package:flutter_5/core/service_locator.dart' show getIt, setupServiceLocator;
+import 'package:flutter_5/core/di/app_module.dart';
 import 'package:flutter_5/shared/services/app_config_service.dart';
 import 'package:flutter_5/shared/state/booking_state.dart';
 import 'package:flutter_5/shared/state/user_state.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Настройка старого service locator (для обратной совместимости)
   await setupServiceLocator();
+  
+  // Настройка Clean Architecture DI
+  await setupAppModule();
+  
   runApp(
     const ProviderScope(
       child: BookingApp(),
