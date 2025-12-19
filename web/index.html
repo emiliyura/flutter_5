@@ -34,6 +34,16 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <!-- SQL.js must be loaded before Flutter -->
+  <script src="https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-wasm.js"></script>
+  <script>
+    var sqlPromise = initSqlJs({
+      locateFile: file => `https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/${file}`
+    });
+    sqlPromise.then(function(SQL) {
+      window.SQL = SQL;
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

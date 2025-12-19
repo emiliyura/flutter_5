@@ -1,20 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../booking/models/room.dart';
+import '../providers/favorites_provider.dart';
 
-class RoomCard extends StatelessWidget {
+class RoomCard extends ConsumerWidget {
   final Room room;
   final ValueChanged<Room> onBook;
 
   const RoomCard({Key? key, required this.room, required this.onBook}) : super(key: key);
 
+  void _navigateToDetail(BuildContext context) {
+    context.push('/room/${room.id}');
+  }
+
+  void _toggleFavorite(WidgetRef ref) {
+    ref.read(favoritesProviderProvider.notifier).toggleFavorite(room.id);
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isFavorite = ref.watch(favoritesProviderProvider).contains(room.id);
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Row(
+      child: InkWell(
+        onTap: () => _navigateToDetail(context),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Row(
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
@@ -58,6 +73,14 @@ class RoomCard extends StatelessWidget {
             ),
             Column(
               children: [
+                IconButton(
+                  icon: Icon(
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: isFavorite ? Colors.red : Colors.grey,
+                  ),
+                  onPressed: () => _toggleFavorite(ref),
+                  tooltip: isFavorite ? 'Удалить из избранного' : 'Добавить в избранное',
+                ),
                 room.isBooked
                     ? Chip(label: const Text('Забронирован'), backgroundColor: Colors.red.shade100)
                     : ElevatedButton(onPressed: () => onBook(room), child: const Text('Забронировать')),
@@ -66,23 +89,24 @@ class RoomCard extends StatelessWidget {
             )
           ],
         ),
+        ),
       ),
     );
   }
   String _getRoomImageUrl(String roomId) {
     switch (roomId) {
       case 'r1':
-        return 'https://media-cdn.tripadvisor.com/media/photo-s/0c/de/a0/74/photo1jpg.jpg';
+        return 'https://avatars.mds.yandex.net/get-vertis-journal/4080458/XXXL.webp_1706519116815/1200x1200';
       case 'r2':
-        return 'https://augustnews.ru/wp-content/uploads/2019/03/kvartira-priton-komnata-grjaz-ne-ubrano.jpg';
+        return 'https://avatars.mds.yandex.net/get-vertis-journal/4220003/XXXL_4.webp_1706538708024/845x845';
       case 'r3':
-        return 'https://static.tildacdn.com/tild3439-3462-4232-a465-656662373336/nazional_6.jpg';
+        return 'https://avatars.mds.yandex.net/get-vertis-journal/4471904/XXXL-3.jpeg_1706517281762/845x845';
       case 'r4':
-        return 'https://www.hotel-moscow.ru/storage/media/fc330849-b5f8-4f49-b5ad-10581931519a.jpg';
+        return 'https://avatars.mds.yandex.net/get-vertis-journal/4465444/hostel_komnata.jpeg_1706517383201/845x845';
       case 'r5':
-        return 'https://cityparkhotels.ru/wp-content/uploads/2021/07/DSF1210_1_2.jpg';
+        return 'https://avatars.mds.yandex.net/get-vertis-journal/4465444/bez_okon.jpeg_1706517513201/845x845';
       default:
-        return 'https://cityparkhotels.ru/wp-content/uploads/2021/07/DSF1210_1_2.jpg';
+        return 'https://avatars.mds.yandex.net/get-vertis-journal/4212087/standart.jpeg_1706518084136/845x845';
     }
   }
 }

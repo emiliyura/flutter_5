@@ -1,24 +1,56 @@
 import 'package:flutter/material.dart';
-import 'features/booking/booking_container.dart';
-import 'package:local_utils/local_utils.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_5/app/app_router.dart';
+import 'package:flutter_5/core/service_locator.dart' show getIt, setupServiceLocator;
+import 'package:flutter_5/core/di/app_module.dart';
+import 'package:flutter_5/shared/services/app_config_service.dart';
+import 'package:flutter_5/shared/state/booking_state.dart';
+import 'package:flutter_5/shared/state/user_state.dart';
+import 'package:flutter_5/features/booking/providers/theme_provider.dart';
 
-void main() {
-  runApp(const BookingApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Настройка старого service locator (для обратной совместимости)
+  await setupServiceLocator();
+  
+  // Настройка Clean Architecture DI с Drift базой данных
+  await setupAppModule();
+  
+  runApp(
+    const ProviderScope(
+      child: BookingApp(),
+    ),
+  );
 }
 
-class BookingApp extends StatelessWidget {
-  const BookingApp({Key? key}) : super(key: key);
+class BookingApp extends ConsumerWidget {
+  const BookingApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Hotel Booking',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final appConfig = getIt<AppConfigService>();
+    final bookingState = getIt<BookingState>();
+    final userState = getIt<UserState>();
+    final router = ref.watch(appRouterProvider);
+    
+    // Получаем текущий режим темы
+    final themeMode = ref.watch(themeProviderProvider);
+
+    // Сохраняем совместимость со старым кодом через InheritedWidget
+    return BookingStateProvider(
+      notifier: bookingState,
+      child: UserStateProvider(
+        userState: userState,
+        child: MaterialApp.router(
+          debugShowCheckedModeBanner: false,
+          title: appConfig.fullAppName,
+          theme: getLightTheme(),
+          darkTheme: getDarkTheme(),
+          themeMode: themeMode,
+          routerConfig: router,
+        ),
       ),
-      home: const BookingContainer(),
     );
   }
 }
-
-
