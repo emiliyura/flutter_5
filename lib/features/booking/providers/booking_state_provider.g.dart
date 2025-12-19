@@ -49,7 +49,7 @@ Map<String, dynamic> _$BookingsStatsToJson(BookingsStats instance) =>
 // **************************************************************************
 
 String _$bookingStateProviderHash() =>
-    r'bd96a6d44ac7abebc2262bda090a4101352a798e';
+    r'edfe5e5e2c74e776ce93e099fe7928f2dce495c5';
 
 /// See also [BookingStateProvider].
 @ProviderFor(BookingStateProvider)

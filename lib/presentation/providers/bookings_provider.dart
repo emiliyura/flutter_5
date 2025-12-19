@@ -131,3 +131,13 @@ class BookingsNotifier extends _$BookingsNotifier {
     );
   }
 }
+
+
+
+
+
+
+
+
+
+

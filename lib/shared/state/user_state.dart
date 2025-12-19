@@ -105,6 +105,33 @@ class UserState extends ChangeNotifier {
 
   void logout() {
     _isAuthenticated = false;
+    _name = '';
+    _email = '';
+    _phone = '';
+    _city = '';
+    _registrationDate = null;
+    _avatarUrl = null;
+    notifyListeners();
+  }
+
+  void setAuthenticated(bool value) {
+    _isAuthenticated = value;
+    notifyListeners();
+  }
+
+  void setUserData({
+    required String name,
+    required String email,
+    String phone = '',
+    String city = '',
+    DateTime? registrationDate,
+  }) {
+    _name = name;
+    _email = email;
+    _phone = phone;
+    _city = city;
+    _registrationDate = registrationDate;
+    _isAuthenticated = true;
     notifyListeners();
   }
 }

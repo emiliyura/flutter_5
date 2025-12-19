@@ -3,8 +3,6 @@ import '../../domain/repositories/rooms_repository.dart';
 import '../datasources/rooms_local_data_source.dart';
 import '../datasources/rooms_remote_data_source.dart';
 
-/// Реализация репозитория для работы с номерами
-/// Использует паттерн Repository для абстракции источников данных
 class RoomsRepositoryImpl implements RoomsRepository {
   final RoomsRemoteDataSource _remoteDataSource;
   final RoomsLocalDataSource _localDataSource;
@@ -106,3 +104,13 @@ class RoomsRepositoryImpl implements RoomsRepository {
     }
   }
 }
+
+
+
+
+
+
+
+
+
+

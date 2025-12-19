@@ -15,3 +15,13 @@ abstract class RoomsRepository {
   /// Обновить список номеров
   Future<void> refreshRooms();
 }
+
+
+
+
+
+
+
+
+
+

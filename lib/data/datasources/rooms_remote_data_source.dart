@@ -9,3 +9,13 @@ abstract class RoomsRemoteDataSource {
   /// Получить номер по ID с сервера
   Future<RoomDto> getRoomById(String roomId);
 }
+
+
+
+
+
+
+
+
+
+

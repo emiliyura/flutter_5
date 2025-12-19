@@ -1,8 +1,6 @@
 import '../../domain/entities/loyalty_operation.dart';
 import '../../domain/repositories/loyalty_repository.dart';
 
-/// Реализация репозитория для работы с программой лояльности
-/// Временная реализация с хранением в памяти (для демонстрации)
 class LoyaltyRepositoryImpl implements LoyaltyRepository {
   int _currentPoints = 0;
   final List<LoyaltyOperation> _operations = [];
@@ -63,3 +61,13 @@ class LoyaltyRepositoryImpl implements LoyaltyRepository {
     _operations.insert(0, operation);
   }
 }
+
+
+
+
+
+
+
+
+
+

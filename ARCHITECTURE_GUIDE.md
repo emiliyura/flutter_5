@@ -347,3 +347,13 @@ A: Use Cases должны выбрасывать исключения, UI Layer 
 
 - [CLEAN_ARCHITECTURE.md](./CLEAN_ARCHITECTURE.md) - Полная документация архитектуры
 - [REFACTORING_SUMMARY.md](./REFACTORING_SUMMARY.md) - Резюме выполненной работы
+
+
+
+
+
+
+
+
+
+

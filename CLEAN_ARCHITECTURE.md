@@ -215,3 +215,13 @@ Data Layer → Repository Implementations
 3. Написать unit-тесты для Use Cases
 4. Написать unit-тесты для Repositories
 5. Интегрировать реальный API вместо моковых данных
+
+
+
+
+
+
+
+
+
+

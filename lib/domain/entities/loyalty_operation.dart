@@ -22,3 +22,13 @@ class LoyaltyOperation {
     this.bookingId,
   });
 }
+
+
+
+
+
+
+
+
+
+

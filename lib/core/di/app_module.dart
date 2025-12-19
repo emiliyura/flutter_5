@@ -1,7 +1,9 @@
 import '../../data/datasources/rooms_local_data_source.dart';
-import '../../data/datasources/rooms_local_data_source_impl.dart';
+import '../../data/datasources/rooms_local_data_source_shared_preferences_impl.dart';
 import '../../data/datasources/rooms_remote_data_source.dart';
 import '../../data/datasources/rooms_remote_data_source_impl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../data/database/app_database.dart';
 import '../../data/repositories/bookings_repository_impl.dart';
 import '../../data/repositories/favorites_repository_impl.dart';
 import '../../data/repositories/loyalty_repository_impl.dart';
@@ -28,6 +30,11 @@ export '../service_locator.dart' show getIt;
 /// - Repositories (интерфейсы и их реализации)
 /// - Use Cases (зависят от интерфейсов репозиториев)
 Future<void> setupAppModule() async {
+  // ========== Database ==========
+  getIt.registerLazySingleton<AppDatabase>(
+    () => AppDatabase(),
+  );
+
   // ========== Data Sources ==========
   
   // Rooms Data Sources
@@ -35,8 +42,10 @@ Future<void> setupAppModule() async {
     () => RoomsRemoteDataSourceImpl(),
   );
   
+  // SharedPreferences для кэширования номеров
+  final prefs = await SharedPreferences.getInstance();
   getIt.registerLazySingleton<RoomsLocalDataSource>(
-    () => RoomsLocalDataSourceImpl(),
+    () => RoomsLocalDataSourceSharedPreferencesImpl(prefs),
   );
 
   // ========== Repositories ==========
@@ -49,14 +58,14 @@ Future<void> setupAppModule() async {
     ),
   );
 
-  // Bookings Repository
+  // Bookings Repository - использует базу данных Drift
   getIt.registerLazySingleton<BookingsRepository>(
-    () => BookingsRepositoryImpl(),
+    () => BookingsRepositoryImpl(getIt<AppDatabase>()),
   );
 
-  // Favorites Repository
+  // Favorites Repository - использует базу данных Drift
   getIt.registerLazySingleton<FavoritesRepository>(
-    () => FavoritesRepositoryImpl(),
+    () => FavoritesRepositoryImpl(getIt<AppDatabase>()),
   );
 
   // Loyalty Repository
@@ -64,9 +73,9 @@ Future<void> setupAppModule() async {
     () => LoyaltyRepositoryImpl(),
   );
 
-  // User Repository
+  // User Repository - использует базу данных Drift
   getIt.registerLazySingleton<UserRepository>(
-    () => UserRepositoryImpl(),
+    () => UserRepositoryImpl(getIt<AppDatabase>()),
   );
 
   // ========== Use Cases ==========
@@ -95,3 +104,5 @@ Future<void> setupAppModule() async {
 Future<void> resetAppModule() async {
   await getIt.reset();
 }
+
+

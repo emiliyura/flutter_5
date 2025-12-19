@@ -15,13 +15,15 @@ Future<void> setupServiceLocator() async {
     ),
   );
 
-  getIt.registerSingleton<ThemeService>(
-    ThemeService(),
-  );
+  // Инициализируем ThemeService с загрузкой сохранённой темы
+  final themeService = ThemeService();
+  await themeService.init();
+  getIt.registerSingleton<ThemeService>(themeService);
 
-  getIt.registerSingleton<AppSettingsService>(
-    AppSettingsService(),
-  );
+  // Инициализируем AppSettingsService с загрузкой сохранённых настроек
+  final settingsService = AppSettingsService();
+  await settingsService.init();
+  getIt.registerSingleton<AppSettingsService>(settingsService);
 
   getIt.registerSingleton<BookingState>(
     BookingState(),
@@ -35,4 +37,3 @@ Future<void> setupServiceLocator() async {
 Future<void> resetServiceLocator() async {
   await getIt.reset();
 }
-

@@ -12,3 +12,13 @@ abstract class RoomsLocalDataSource {
   /// Очистить локальное хранилище
   Future<void> clearRooms();
 }
+
+
+
+
+
+
+
+
+
+

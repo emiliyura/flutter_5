@@ -13,3 +13,13 @@ class GetRoomsUseCase {
     return await _repository.getRooms();
   }
 }
+
+
+
+
+
+
+
+
+
+

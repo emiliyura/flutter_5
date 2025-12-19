@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../core/service_locator.dart';
@@ -71,7 +72,8 @@ class SettingsProvider extends _$SettingsProvider {
 
   bool getDarkModeEnabled() => state.darkModeEnabled;
 
-  void setDarkModeEnabled(bool value) {
+  void setDarkModeEnabled(bool value, {WidgetRef? ref}) {
+    // Сохраняем в ThemeService
     final themeService = getIt<ThemeService>();
     themeService.setDarkMode(value);
     state = state.copyWith(darkModeEnabled: value);

@@ -22,3 +22,13 @@ abstract class LoyaltyRepository {
     required String description,
   });
 }
+
+
+
+
+
+
+
+
+
+

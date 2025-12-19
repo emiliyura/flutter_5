@@ -16,3 +16,13 @@ abstract class FavoritesRepository {
   /// Проверить, находится ли номер в избранном
   Future<bool> isFavorite(String roomId);
 }
+
+
+
+
+
+
+
+
+
+

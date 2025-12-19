@@ -1,5 +1,8 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../core/di/app_module.dart' show getIt;
+import '../../../domain/repositories/bookings_repository.dart';
+import '../../../domain/entities/room.dart' as domain;
 import '../models/booking.dart';
 import '../models/room.dart';
 
@@ -95,9 +98,12 @@ class BookingState {
 
 @riverpod
 class BookingStateProvider extends _$BookingStateProvider {
+  BookingsRepository? _repository;
+
   @override
   BookingState build() {
-    _loadCache();
+    _repository = getIt<BookingsRepository>();
+    _loadBookingsFromDb();
     return BookingState(
       process: BookingProcessModel(state: BookingProcessState.idle),
       bookings: [],
@@ -105,10 +111,21 @@ class BookingStateProvider extends _$BookingStateProvider {
     );
   }
 
-  Future<void> _loadCache() async {
+  Future<void> _loadBookingsFromDb() async {
     try {
-      await Future.delayed(const Duration(milliseconds: 300));
-      state = state.copyWith(cache: AsyncValue.data(state.bookings));
+      final dbBookings = await _repository!.getBookings();
+      final bookings = dbBookings.map((b) => Booking(
+        id: b.id,
+        roomId: b.roomId,
+        guestName: b.guestName,
+        checkIn: b.checkIn,
+        checkOut: b.checkOut,
+      )).toList();
+      
+      state = state.copyWith(
+        bookings: bookings,
+        cache: AsyncValue.data(bookings),
+      );
     } catch (e, stack) {
       state = state.copyWith(cache: AsyncValue.error(e, stack));
     }
@@ -125,18 +142,29 @@ class BookingStateProvider extends _$BookingStateProvider {
     );
 
     try {
-      await Future.delayed(const Duration(seconds: 1));
+      // Конвертируем Room в domain.Room
+      final domainRoom = domain.Room(
+        id: room.id,
+        title: room.title,
+        price: room.price,
+        beds: 1,
+        amenities: room.amenities,
+      );
 
-      if (guestName.toLowerCase().contains('error')) {
-        throw Exception('Ошибка при создании бронирования');
-      }
-
-      final booking = Booking(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        roomId: room.id,
+      // Сохраняем в базу данных
+      final dbBooking = await _repository!.createBooking(
+        room: domainRoom,
         guestName: guestName,
         checkIn: checkIn,
         checkOut: checkOut,
+      );
+
+      final booking = Booking(
+        id: dbBooking.id,
+        roomId: dbBooking.roomId,
+        guestName: dbBooking.guestName,
+        checkIn: dbBooking.checkIn,
+        checkOut: dbBooking.checkOut,
       );
 
       final updatedBookings = [...state.bookings, booking];
@@ -172,7 +200,8 @@ class BookingStateProvider extends _$BookingStateProvider {
     );
   }
 
-  void removeBooking(String bookingId) {
+  Future<void> removeBooking(String bookingId) async {
+    await _repository?.cancelBooking(bookingId);
     final updatedBookings = state.bookings.where((b) => b.id != bookingId).toList();
     state = state.copyWith(
       bookings: updatedBookings,
@@ -201,6 +230,6 @@ class BookingStateProvider extends _$BookingStateProvider {
 
   Future<void> refreshBookingsCache() async {
     state = state.copyWith(cache: const AsyncValue.loading());
-    await _loadCache();
+    await _loadBookingsFromDb();
   }
 }

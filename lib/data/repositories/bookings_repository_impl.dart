@@ -1,64 +1,83 @@
-import '../../domain/entities/booking.dart';
+import 'package:drift/drift.dart';
+import '../../domain/entities/booking.dart' as domain;
 import '../../domain/entities/room.dart';
 import '../../domain/repositories/bookings_repository.dart';
+import '../database/app_database.dart';
 
-/// Реализация репозитория для работы с бронированиями
-/// Временная реализация с хранением в памяти (для демонстрации)
+/// Реализация репозитория для работы с бронированиями с использованием Drift
 class BookingsRepositoryImpl implements BookingsRepository {
-  final List<Booking> _bookings = [];
+  final AppDatabase _db;
+
+  BookingsRepositoryImpl(this._db);
 
   @override
-  Future<List<Booking>> getBookings() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    return List.from(_bookings);
+  Future<List<domain.Booking>> getBookings() async {
+    final dbBookings = await _db.getAllBookings();
+    return dbBookings.map((b) => domain.Booking(
+      id: b.id.toString(),
+      roomId: b.roomId,
+      guestName: b.guestName,
+      checkIn: b.checkInDate,
+      checkOut: b.checkOutDate,
+    )).toList();
   }
 
   @override
-  Future<Booking?> getBookingById(String bookingId) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    try {
-      return _bookings.firstWhere((b) => b.id == bookingId);
-    } catch (e) {
-      return null;
-    }
+  Future<domain.Booking?> getBookingById(String bookingId) async {
+    final dbBooking = await _db.getBookingByStringId(bookingId);
+    if (dbBooking == null) return null;
+    return domain.Booking(
+      id: dbBooking.id.toString(),
+      roomId: dbBooking.roomId,
+      guestName: dbBooking.guestName,
+      checkIn: dbBooking.checkInDate,
+      checkOut: dbBooking.checkOutDate,
+    );
   }
 
   @override
-  Future<Booking> createBooking({
+  Future<domain.Booking> createBooking({
     required Room room,
     required String guestName,
     required DateTime checkIn,
     required DateTime checkOut,
   }) async {
-    // Имитация задержки создания бронирования
-    await Future.delayed(const Duration(seconds: 1));
-
     // Проверка на ошибку (для тестирования)
     if (guestName.toLowerCase().contains('error')) {
       throw Exception('Ошибка при создании бронирования');
     }
 
-    final booking = Booking(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+    final nights = checkOut.difference(checkIn).inDays;
+    final totalPrice = room.price * nights;
+
+    final companion = BookingsCompanion.insert(
+      roomId: room.id,
+      roomTitle: room.title,
+      guestName: guestName,
+      checkInDate: checkIn,
+      checkOutDate: checkOut,
+      totalPrice: totalPrice,
+      status: 'confirmed',
+    );
+
+    final id = await _db.createBooking(companion);
+
+    return domain.Booking(
+      id: id.toString(),
       roomId: room.id,
       guestName: guestName,
       checkIn: checkIn,
       checkOut: checkOut,
     );
-
-    _bookings.add(booking);
-    return booking;
   }
 
   @override
   Future<void> cancelBooking(String bookingId) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    _bookings.removeWhere((b) => b.id == bookingId);
+    await _db.deleteBooking(bookingId);
   }
 
   @override
   Future<void> refreshBookings() async {
     // В реальном приложении здесь будет синхронизация с сервером
-    await Future.delayed(const Duration(milliseconds: 300));
   }
 }

@@ -6,6 +6,7 @@ import 'package:flutter_5/core/di/app_module.dart';
 import 'package:flutter_5/shared/services/app_config_service.dart';
 import 'package:flutter_5/shared/state/booking_state.dart';
 import 'package:flutter_5/shared/state/user_state.dart';
+import 'package:flutter_5/features/booking/providers/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,7 +14,7 @@ void main() async {
   // Настройка старого service locator (для обратной совместимости)
   await setupServiceLocator();
   
-  // Настройка Clean Architecture DI
+  // Настройка Clean Architecture DI с Drift базой данных
   await setupAppModule();
   
   runApp(
@@ -32,6 +33,9 @@ class BookingApp extends ConsumerWidget {
     final bookingState = getIt<BookingState>();
     final userState = getIt<UserState>();
     final router = ref.watch(appRouterProvider);
+    
+    // Получаем текущий режим темы
+    final themeMode = ref.watch(themeProviderProvider);
 
     // Сохраняем совместимость со старым кодом через InheritedWidget
     return BookingStateProvider(
@@ -41,7 +45,9 @@ class BookingApp extends ConsumerWidget {
         child: MaterialApp.router(
           debugShowCheckedModeBanner: false,
           title: appConfig.fullAppName,
-          theme: ThemeData(useMaterial3: true),
+          theme: getLightTheme(),
+          darkTheme: getDarkTheme(),
+          themeMode: themeMode,
           routerConfig: router,
         ),
       ),

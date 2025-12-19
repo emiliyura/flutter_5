@@ -1,41 +1,43 @@
 import '../../domain/repositories/favorites_repository.dart';
+import '../database/app_database.dart';
 
-/// Реализация репозитория для работы с избранным
-/// Временная реализация с хранением в памяти (для демонстрации)
+/// Реализация репозитория для работы с избранным с использованием Drift
 class FavoritesRepositoryImpl implements FavoritesRepository {
-  final Set<String> _favoriteIds = <String>{};
+  final AppDatabase _db;
+
+  FavoritesRepositoryImpl(this._db);
 
   @override
   Future<Set<String>> getFavoriteRoomIds() async {
-    await Future.delayed(const Duration(milliseconds: 50));
-    return Set.from(_favoriteIds);
+    final favorites = await _db.getAllFavorites();
+    return favorites.map((f) => f.roomId).toSet();
   }
 
   @override
   Future<void> addToFavorites(String roomId) async {
-    await Future.delayed(const Duration(milliseconds: 50));
-    _favoriteIds.add(roomId);
+    final isFav = await _db.isRoomFavorite(roomId);
+    if (!isFav) {
+      await _db.addFavorite(roomId);
+    }
   }
 
   @override
   Future<void> removeFromFavorites(String roomId) async {
-    await Future.delayed(const Duration(milliseconds: 50));
-    _favoriteIds.remove(roomId);
+    await _db.removeFavorite(roomId);
   }
 
   @override
   Future<void> toggleFavorite(String roomId) async {
-    await Future.delayed(const Duration(milliseconds: 50));
-    if (_favoriteIds.contains(roomId)) {
-      _favoriteIds.remove(roomId);
+    final isFav = await _db.isRoomFavorite(roomId);
+    if (isFav) {
+      await _db.removeFavorite(roomId);
     } else {
-      _favoriteIds.add(roomId);
+      await _db.addFavorite(roomId);
     }
   }
 
   @override
   Future<bool> isFavorite(String roomId) async {
-    await Future.delayed(const Duration(milliseconds: 50));
-    return _favoriteIds.contains(roomId);
+    return await _db.isRoomFavorite(roomId);
   }
 }

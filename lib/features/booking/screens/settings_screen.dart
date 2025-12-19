@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/settings_provider.dart';
+import '../providers/theme_provider.dart';
 import '../localization/settings_localizations.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
-
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -48,7 +48,10 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: Text(localizations.darkThemeSubtitle),
             value: darkModeEnabled,
             onChanged: (value) {
-              ref.read(settingsProviderProvider.notifier).setDarkModeEnabled(value);
+              // Обновляем тему через ThemeProvider
+              ref.read(themeProviderProvider.notifier).setDarkMode(value);
+              // Обновляем состояние настроек
+              ref.read(settingsProviderProvider.notifier).setDarkModeEnabled(value, ref: ref);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(localizations.darkThemeEnabled(value)),
@@ -67,6 +70,17 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () {
               _showLanguageDialog(context, ref, language, localizations);
             },
+          ),
+          _buildSectionHeader(context, 'Хранилище данных'),
+          ListTile(
+            leading: const Icon(Icons.storage),
+            title: const Text('Тип хранилища'),
+            subtitle: const Text('SQLite (Drift)'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.save),
+            title: const Text('Второй тип'),
+            subtitle: const Text('SharedPreferences (для кэша номеров)'),
           ),
           _buildSectionHeader(context, localizations.aboutSection),
           ListTile(
